@@ -2,7 +2,7 @@
 <html lang="ca">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#EDEBE7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -394,8 +394,12 @@ body {
 }
 .import-drop:active { border-color: var(--accent); background: rgba(232,197,71,0.05); }
 
-/* UTILS */
-.mt8 { margin-top: 8px; }
+/* VAC CAL */
+.cal-cell.vac-sel { background: var(--green-bg) !important; border-color: var(--green) !important; }
+.cal-cell.vac-sel .day-n { color: var(--green); font-weight: 700; }
+.cal-cell.vac-existing { background: #E8F5E9; }
+.cal-cell.vac-existing .day-n { color: var(--green); }
+.cal-cell.no-laboral { opacity: 0.4; cursor: default !important; }
 .mt12 { margin-top: 12px; }
 .mt16 { margin-top: 16px; }
 .text-mono { font-family: var(--mono); }
@@ -598,24 +602,43 @@ body {
       </button>
     </div>
     <div class="card">
-      <div class="card-title">Registrar període</div>
-      <div class="form-row form-group">
-        <div>
-          <label class="form-label">Des de</label>
-          <input class="form-input" type="date" id="v-desde">
-        </div>
-        <div>
-          <label class="form-label">Fins a</label>
-          <input class="form-input" type="date" id="v-hasta">
+      <div class="card-title">Seleccionar dies de vacances</div>
+      <!-- Nav mes calendari vac -->
+      <div class="sec-header" style="margin-bottom:10px;">
+        <span class="sec-title" id="vac-cal-title"></span>
+        <div class="nav-arrows">
+          <button class="arrow-btn" onclick="changeVacCalMonth(-1)"><i class="ti ti-chevron-left"></i></button>
+          <button class="arrow-btn" onclick="changeVacCalMonth(1)"><i class="ti ti-chevron-right"></i></button>
         </div>
       </div>
-      <div class="form-group">
+      <!-- Dies de la setmana -->
+      <div class="cal-dow-row">
+        <div class="cal-dow">Dl</div><div class="cal-dow">Dt</div><div class="cal-dow">Dc</div>
+        <div class="cal-dow">Dj</div><div class="cal-dow">Dv</div>
+        <div class="cal-dow" style="opacity:.35">Ds</div><div class="cal-dow" style="opacity:.35">Dg</div>
+      </div>
+      <div class="cal-grid" id="vac-cal-grid"></div>
+      <!-- Llegenda -->
+      <div class="cal-legend" style="margin-top:10px;">
+        <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>Seleccionat</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--red);opacity:.4"></div>Festiu</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--border2)"></div>Cap de setmana</div>
+      </div>
+      <!-- Resum selecció -->
+      <div id="vac-sel-info" style="display:none;margin-top:12px;padding:10px 12px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius-sm);font-size:13px;color:var(--green);"></div>
+      <!-- Desc i confirmar -->
+      <div class="form-group mt12">
         <label class="form-label">Descripció</label>
         <input class="form-input" type="text" id="v-desc" placeholder="Estiu, Nadal, pont...">
       </div>
-      <button class="btn btn-primary" onclick="addVac()">
-        <i class="ti ti-plus"></i> Afegir període
-      </button>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="confirmVacSel()">
+          <i class="ti ti-check"></i> Confirmar
+        </button>
+        <button class="btn btn-ghost" onclick="clearVacSel()">
+          <i class="ti ti-x"></i> Netejar
+        </button>
+      </div>
     </div>
     <div class="card">
       <div class="card-title">Períodes registrats</div>
@@ -899,7 +922,11 @@ function isInVac(d){return state.vacaciones.find(v=>d>=v.desde&&d<=v.hasta)||nul
 function eDateEntries(d){return state.entries.filter(e=>e.fecha===d);}
 function getFestivoAPI(d){const y=d.slice(0,4);return(state.festivosAPI[y]||[]).find(f=>f.fecha===d)||null;}
 function getFestivoLocal(d){return state.festivosLocales.find(f=>f.fecha===d)||null;}
-function diasVacUsados(y){return state.vacaciones.filter(v=>new Date(v.desde+'T00:00:00').getFullYear()===y).reduce((s,v)=>s+v.dias,0);}
+function diasVacUsados(y){
+  return state.vacaciones.filter(v=>{
+    const d=new Date(v.desde+'T00:00:00');return d.getFullYear()===y;
+  }).reduce((s,v)=>s+(v.dies||v.dias||0),0);
+}
 
 function startEdit(id){
   const e=state.entries.find(e=>e.id===id);if(!e)return;
@@ -991,17 +1018,132 @@ function saveVacCupo(){
   saveAll();render();
 }
 function deleteVacCupo(anio){state.vacCupos=state.vacCupos.filter(c=>c.anio!==anio);saveAll();render();}
-function addVac(){
-  const desde=document.getElementById('v-desde').value,hasta=document.getElementById('v-hasta').value;
+// VAC CAL
+let vacCalMonth=new Date().getMonth(), vacCalYear=new Date().getFullYear();
+let vacSelected=new Set(); // Set de strings 'yyyy-mm-dd'
+
+function changeVacCalMonth(dir){
+  vacCalMonth+=dir;
+  if(vacCalMonth<0){vacCalMonth=11;vacCalYear--;}
+  if(vacCalMonth>11){vacCalMonth=0;vacCalYear++;}
+  renderVacCal();
+}
+
+function isLaboral(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const dow=d.getDay();
+  if(dow===0||dow===6)return false; // cap de setmana
+  if(getFestivoAPI(dateStr)||getFestivoLocal(dateStr))return false; // festiu
+  return true;
+}
+
+function toggleVacDay(dateStr){
+  if(!isLaboral(dateStr))return;
+  if(vacSelected.has(dateStr)) vacSelected.delete(dateStr);
+  else vacSelected.add(dateStr);
+  renderVacCal();
+  updateVacSelInfo();
+}
+
+function updateVacSelInfo(){
+  const info=document.getElementById('vac-sel-info');
+  const n=vacSelected.size;
+  if(n===0){info.style.display='none';return;}
+  info.style.display='block';
+  const dies=n===1?'1 dia laboral seleccionat':`${n} dies laborals seleccionats`;
+  info.textContent=dies;
+}
+
+function clearVacSel(){
+  vacSelected.clear();
+  renderVacCal();
+  updateVacSelInfo();
+}
+
+function confirmVacSel(){
+  if(vacSelected.size===0)return alert('Selecciona almenys un dia.');
   const desc=document.getElementById('v-desc').value.trim()||'Vacances';
-  if(!desde||!hasta||desde>hasta)return alert('Introdueix un rang de dates vàlid.');
-  const dies=Math.round((new Date(hasta)-new Date(desde))/86400000)+1;
-  state.vacaciones.push({id:Date.now(),desde,hasta,desc,dies});
+  const sorted=[...vacSelected].sort();
+  // Agrupar dies consecutius en períodes
+  const groups=[];
+  let group=[sorted[0]];
+  for(let i=1;i<sorted.length;i++){
+    const prev=new Date(sorted[i-1]+'T00:00:00');
+    const curr=new Date(sorted[i]+'T00:00:00');
+    const diffDays=Math.round((curr-prev)/86400000);
+    // Considerem consecutius si la diferència és ≤3 (per saltar cap de setmana)
+    if(diffDays<=3){group.push(sorted[i]);}
+    else{groups.push(group);group=[sorted[i]];}
+  }
+  groups.push(group);
+
+  // Crear un registre per cada grup
+  groups.forEach(g=>{
+    const desde=g[0], hasta=g[g.length-1];
+    const dies=g.length;
+    state.vacaciones.push({id:Date.now()+Math.random(),desde,hasta,desc,dies,diesList:g});
+  });
   state.vacaciones.sort((a,b)=>b.desde.localeCompare(a.desde));
-  document.getElementById('v-desde').value='';document.getElementById('v-hasta').value='';document.getElementById('v-desc').value='';
+  vacSelected.clear();
+  document.getElementById('v-desc').value='';
   saveAll();render();
 }
+
+function addVac(){} // legacy, ja no s'usa
+
 function deleteVac(id){state.vacaciones=state.vacaciones.filter(v=>v.id!==id);saveAll();render();}
+
+function renderVacCal(){
+  document.getElementById('vac-cal-title').textContent=MONTHS[vacCalMonth]+' '+vacCalYear;
+  const m=vacCalMonth,y=vacCalYear;
+  const first=new Date(y,m,1);let sdow=first.getDay();sdow=sdow===0?6:sdow-1;
+  const dim=new Date(y,m+1,0).getDate();
+  const tod=today();
+
+  // Dies que ja tenen vacances registrades
+  const existingDays=new Set();
+  state.vacaciones.forEach(v=>{
+    if(v.diesList){v.diesList.forEach(d=>existingDays.add(d));}
+    else{
+      // Compatibilitat amb registres antics (rang)
+      const start=new Date(v.desde+'T00:00:00'),end=new Date(v.hasta+'T00:00:00');
+      for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+        existingDays.add(d.toISOString().slice(0,10));
+      }
+    }
+  });
+
+  let html='';
+  for(let i=0;i<sdow;i++)html+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=dim;d++){
+    const dstr=ds(y,m,d);
+    const dow=new Date(y,m,d).getDay();
+    const isWE=dow===0||dow===6;
+    const fest=getFestivoAPI(dstr)||getFestivoLocal(dstr);
+    const laboral=!isWE&&!fest;
+    const isSel=vacSelected.has(dstr);
+    const isExisting=existingDays.has(dstr);
+    const isToday=dstr===tod;
+
+    let cls='cal-cell';
+    if(isWE)cls+=' weekend no-laboral';
+    else if(fest)cls+=' festivo-api no-laboral';
+    else if(isSel)cls+=' vac-sel';
+    else if(isExisting)cls+=' vac-existing';
+    if(isToday)cls+=' today';
+
+    const dotColor=fest?'red':isWE?'':'';
+    let inner=`<div class="day-n">${d}${fest?'<span class="f-dot red"></span>':''}</div>`;
+    if(isExisting&&!isSel){inner+=`<div class="cal-strip vac" style="font-size:9px;">✓</div>`;}
+    if(isSel){inner+=`<div style="font-size:10px;color:var(--green);font-weight:700;">✓</div>`;}
+
+    const onclick=laboral?`onclick="toggleVacDay('${dstr}')"`:'' ;
+    html+=`<div class="${cls}" ${onclick}>${inner}</div>`;
+  }
+  const tot=sdow+dim;const rem=(7-tot%7)%7;
+  for(let i=0;i<rem;i++)html+='<div class="cal-cell empty"></div>';
+  document.getElementById('vac-cal-grid').innerHTML=html;
+}
 function savePago(){
   const mes=document.getElementById('p-mes').value;
   const pag=parseFloat(document.getElementById('p-pagadas').value);
@@ -1018,7 +1160,7 @@ function savePago(){
   saveAll();render();
 }
 
-function render(){renderRegistro();renderResumen();renderCalendario();renderAnual();renderPago();renderVacaciones();renderAjustos();}
+function render(){renderRegistro();renderResumen();renderCalendario();renderAnual();renderPago();renderVacaciones();renderAjustos();renderVacCal();}
 
 function renderRegistro(){
   // Últims 10 registres de tota l'app, sense agrupar per mes
@@ -1271,10 +1413,13 @@ function renderVacaciones(){
   document.getElementById('vac-lista').innerHTML=state.vacaciones.map(v=>{
     const d1=new Date(v.desde+'T00:00:00'),d2=new Date(v.hasta+'T00:00:00');
     const f=d=>d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0');
+    const dies=v.dies||v.dias||0;
+    // Si tots els dies son iguals és un dia solt
+    const label=v.desde===v.hasta?f(d1):`${f(d1)} → ${f(d2)}`;
     return`<div class="entry-item">
-      <span class="entry-date">${f(d1)}</span>
+      <span class="entry-date" style="min-width:80px;font-size:12px;">${label}</span>
       <span class="entry-desc">${v.desc}</span>
-      <span class="pill green">${v.dies}d</span>
+      <span class="pill green">${dies}d</span>
       <button class="icon-btn del" onclick="deleteVac(${v.id})"><i class="ti ti-trash"></i></button>
     </div>`;
   }).join('');
