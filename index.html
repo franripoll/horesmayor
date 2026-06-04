@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HoresMayor">
+<meta name="description" content="Registra les teues hores extres a Ceràmica Mayor">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<title>HoresMayor</title>
+<style>
+:root {
+  --bg: #0f0f1a;
+  --bg2: #1a1a2e;
+  --bg3: #16213e;
+  --surface: #1e1e35;
+  --surface2: #252540;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.15);
+  --text: #f0f0f5;
+  --text2: rgba(240,240,245,0.6);
+  --text3: rgba(240,240,245,0.35);
+  --accent: #e8c547;
+  --accent2: #f0d060;
+  --green: #4ade80;
+  --green-bg: rgba(74,222,128,0.12);
+  --green-border: rgba(74,222,128,0.3);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.12);
+  --red-border: rgba(248,113,113,0.3);
+  --amber: #fbbf24;
+  --amber-bg: rgba(251,191,36,0.12);
+  --amber-border: rgba(251,191,36,0.3);
+  --blue: #60a5fa;
+  --blue-bg: rgba(96,165,250,0.12);
+  --teal: #2dd4bf;
+  --teal-bg: rgba(45,212,191,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --font: 'Syne', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; background: var(--bg); }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  padding-bottom: calc(72px + var(--safe-bottom));
+}
+
+/* SPLASH */
+#splash {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 1000; padding: 32px;
+  transition: opacity 0.4s ease;
+}
+#splash.hidden { opacity: 0; pointer-events: none; }
+.splash-logo {
+  font-size: 48px; font-weight: 800; letter-spacing: -2px;
+  color: var(--text); margin-bottom: 4px;
+}
+.splash-logo span { color: var(--accent); }
+.splash-sub { font-size: 13px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 48px; font-family: var(--mono); }
+.splash-form { width: 100%; max-width: 320px; }
+.splash-label { font-size: 13px; color: var(--text2); margin-bottom: 8px; display: block; letter-spacing: 0.5px; }
+.splash-input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 14px 16px; color: var(--text);
+  font-family: var(--font); font-size: 16px; outline: none;
+  transition: border-color 0.2s;
+}
+.splash-input:focus { border-color: var(--accent); }
+.splash-btn {
+  width: 100%; margin-top: 12px; background: var(--accent); color: #0f0f1a;
+  border: none; border-radius: var(--radius); padding: 15px;
+  font-family: var(--font); font-size: 16px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.5px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.splash-btn:active { opacity: 0.85; transform: scale(0.98); }
+
+/* HEADER */
+.app-header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  padding: calc(var(--safe-top) + 12px) 20px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.header-logo span { color: var(--accent); }
+.header-user { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+.user-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent); color: #0f0f1a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; letter-spacing: 0;
+}
+
+/* NAV */
+.app-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: var(--bg2); border-top: 1px solid var(--border);
+  display: flex; padding-bottom: var(--safe-bottom);
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 3px; padding: 10px 4px 8px; cursor: pointer;
+  border: none; background: none; color: var(--text3);
+  font-family: var(--font); font-size: 10px; letter-spacing: 0.3px;
+  transition: color 0.15s;
+}
+.nav-item i { font-size: 20px; line-height: 1; }
+.nav-item.active { color: var(--accent); }
+
+/* SECCIONES */
+.section { display: none; padding: 16px 16px 0; }
+.section.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
+}
+.card-title { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; font-family: var(--mono); }
+
+/* KPIs */
+.kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.kpi-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+.kpi-grid.cols4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.kpi {
+  background: var(--surface2); border-radius: var(--radius);
+  padding: 12px; border: 1px solid var(--border);
+}
+.kpi-label { font-size: 10px; color: var(--text3); letter-spacing: 0.5px; margin-bottom: 4px; font-family: var(--mono); }
+.kpi-value { font-size: 20px; font-weight: 700; color: var(--text); font-family: var(--mono); }
+.kpi-value.green { color: var(--green); }
+.kpi-value.red { color: var(--red); }
+.kpi-value.amber { color: var(--amber); }
+.kpi-value.small { font-size: 15px; }
+
+/* FORM */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: block; letter-spacing: 0.3px; }
+.form-input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 11px 13px; color: var(--text);
+  font-family: var(--font); font-size: 15px; outline: none;
+  transition: border-color 0.2s; -webkit-appearance: none;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.slider-wrap { display: flex; align-items: center; gap: 10px; }
+.slider-wrap input[type=range] {
+  flex: 1; -webkit-appearance: none; height: 4px;
+  background: var(--border2); border-radius: 2px; outline: none;
+}
+.slider-wrap input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+  border: 3px solid var(--bg);
+}
+.slider-val { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--accent); min-width: 44px; text-align: right; }
+.type-toggle { display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.type-btn {
+  flex: 1; padding: 10px; font-family: var(--font); font-size: 13px;
+  border: none; background: none; color: var(--text2); cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.type-btn.sel-pos { background: var(--green-bg); color: var(--green); font-weight: 600; }
+.type-btn.sel-neg { background: var(--red-bg); color: var(--red); font-weight: 600; }
+
+/* BOTONES */
+.btn {
+  width: 100%; padding: 13px; border: none; border-radius: var(--radius);
+  font-family: var(--font); font-size: 15px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn:active { opacity: 0.85; transform: scale(0.98); }
+.btn-primary { background: var(--accent); color: #0f0f1a; }
+.btn-primary.edit { background: var(--blue); color: #fff; }
+.btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); margin-top: 8px; }
+.btn-row { display: flex; gap: 8px; }
+.btn-row .btn { width: auto; flex: 1; }
+
+/* EDIT BANNER */
+.edit-banner {
+  background: var(--blue-bg); border: 1px solid rgba(96,165,250,0.3);
+  border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--blue);
+}
+
+/* LISTA ENTRADAS */
+.entry-list { display: flex; flex-direction: column; gap: 0; }
+.entry-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 0; border-bottom: 1px solid var(--border);
+}
+.entry-item:last-child { border-bottom: none; }
+.entry-item.editing { background: var(--blue-bg); border-radius: var(--radius-sm); padding: 11px 10px; margin: 0 -10px; }
+.entry-date { font-family: var(--mono); font-size: 12px; color: var(--text3); min-width: 36px; }
+.entry-desc { flex: 1; font-size: 13px; color: var(--text2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.entry-h { font-family: var(--mono); font-size: 13px; font-weight: 500; min-width: 48px; text-align: right; }
+.entry-h.pos { color: var(--green); }
+.entry-h.neg { color: var(--red); }
+.entry-actions { display: flex; gap: 2px; }
+.icon-btn { background: none; border: none; cursor: pointer; padding: 5px; color: var(--text3); font-size: 17px; }
+.icon-btn:active { color: var(--text); }
+.icon-btn.del:active { color: var(--red); }
+
+/* RESUMEN ROWS */
+.sum-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.sum-row:last-child { border-bottom: none; }
+.sum-lbl { color: var(--text2); }
+.sum-val { font-family: var(--mono); font-weight: 500; color: var(--text); }
+.sum-val.green { color: var(--green); }
+.sum-val.red { color: var(--red); }
+.sum-row.total { font-weight: 600; }
+.sum-row.total .sum-lbl { color: var(--text); }
+
+/* SECTION HEADER */
+.sec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.sec-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+.nav-arrows { display: flex; gap: 6px; }
+.arrow-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer;
+  color: var(--text2); font-size: 16px;
+  transition: background 0.15s, color 0.15s;
+}
+.arrow-btn:active { background: var(--surface); color: var(--text); }
+
+/* CALENDARIO */
+.cal-dow-row { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 2px; }
+.cal-dow { text-align: center; font-size: 10px; font-family: var(--mono); color: var(--text3); padding: 4px 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+.cal-cell {
+  border-radius: 8px; padding: 4px 3px 3px; min-height: 52px;
+  cursor: pointer; border: 1px solid transparent;
+  display: flex; flex-direction: column; gap: 2px;
+  transition: border-color 0.15s;
+}
+.cal-cell:active { border-color: var(--border2); }
+.cal-cell.empty { cursor: default; }
+.cal-cell.today { border-color: var(--accent) !important; }
+.cal-cell.selected { border-color: var(--blue) !important; background: var(--blue-bg); }
+.cal-cell.has-vac { background: var(--teal-bg); }
+.cal-cell.festivo-api { background: var(--red-bg); }
+.cal-cell.festivo-local { background: var(--amber-bg); }
+.cal-cell.weekend .day-n { opacity: 0.4; }
+.day-n { font-family: var(--mono); font-size: 11px; color: var(--text2); font-weight: 500; display: flex; align-items: center; gap: 2px; }
+.cal-cell.today .day-n { color: var(--accent); }
+.cal-cell.festivo-api .day-n { color: var(--red); }
+.cal-cell.festivo-local .day-n { color: var(--amber); }
+.f-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
+.f-dot.red { background: var(--red); }
+.f-dot.amber { background: var(--amber); }
+.cal-strip { font-size: 9px; border-radius: 3px; padding: 1px 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-strip.vac { background: var(--teal-bg); color: var(--teal); }
+.cal-strip.fest-api { background: var(--red-bg); color: var(--red); }
+.cal-strip.fest-local { background: var(--amber-bg); color: var(--amber); }
+.cal-h { font-family: var(--mono); font-size: 10px; font-weight: 500; }
+.cal-h.pos { color: var(--green); }
+.cal-h.neg { color: var(--red); }
+.cal-bar { height: 3px; border-radius: 2px; margin-top: auto; }
+.cal-bar.pos { background: var(--green); }
+.cal-bar.neg { background: var(--red); }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.leg-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+/* DETAIL PANEL */
+.detail-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; margin-top: 10px; }
+.detail-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.detail-date { font-size: 14px; font-weight: 700; }
+.detail-net { font-family: var(--mono); font-size: 16px; font-weight: 500; }
+.detail-net.pos { color: var(--green); }
+.detail-net.neg { color: var(--red); }
+.detail-empty { font-size: 13px; color: var(--text3); font-family: var(--mono); }
+.fest-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 4px 8px; border-radius: 20px; margin-bottom: 8px; }
+.fest-badge.api { background: var(--red-bg); color: var(--red); }
+.fest-badge.local { background: var(--amber-bg); color: var(--amber); }
+.fest-badge.vac { background: var(--teal-bg); color: var(--teal); }
+
+/* FESTIVOS MANAGER */
+.festivo-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.ftag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 5px 9px; border-radius: 20px; font-family: var(--mono); }
+.ftag.api { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+.ftag.local { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.ftag button { background: none; border: none; color: inherit; cursor: pointer; padding: 0; font-size: 14px; opacity: .7; line-height: 1; }
+.api-load-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--blue-bg); border: 1px solid rgba(96,165,250,0.3);
+  color: var(--blue); border-radius: var(--radius-sm); padding: 9px 12px;
+  font-family: var(--font); font-size: 13px; cursor: pointer; width: 100%;
+  justify-content: center; margin-bottom: 12px;
+  transition: opacity 0.2s;
+}
+.api-load-btn:disabled { opacity: 0.5; }
+.api-status { font-size: 12px; font-family: var(--mono); padding: 6px 0; display: none; }
+.api-status.ok { color: var(--green); display: block; }
+.api-status.err { color: var(--red); display: block; }
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+/* VAC COUNTER */
+.vac-block { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 10px; }
+.vac-block-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.vac-block-year { font-size: 15px; font-weight: 700; }
+.vac-nums { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+.vac-num { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; }
+.vac-num-val { font-family: var(--mono); font-size: 24px; font-weight: 700; }
+.vac-num-val.green { color: var(--green); }
+.vac-num-val.amber { color: var(--amber); }
+.vac-num-val.red { color: var(--red); }
+.vac-num-label { font-size: 10px; color: var(--text3); margin-top: 2px; letter-spacing: 0.5px; }
+.progress-bg { height: 10px; background: var(--surface2); border-radius: 5px; overflow: hidden; }
+.progress-bar { height: 100%; border-radius: 5px; background: var(--green); transition: width 0.4s; }
+.progress-bar.amber { background: var(--amber); }
+.progress-bar.red { background: var(--red); }
+.progress-info { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: 5px; }
+.warn-msg { font-size: 12px; margin-top: 6px; font-family: var(--mono); }
+.warn-msg.amber { color: var(--amber); }
+.warn-msg.red { color: var(--red); }
+
+/* ANUAL */
+.chart-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.chart-lbl { font-family: var(--mono); font-size: 11px; color: var(--text3); min-width: 28px; text-align: right; }
+.chart-bar-bg { flex: 1; height: 16px; background: var(--surface2); border-radius: 3px; overflow: hidden; position: relative; }
+.chart-mid-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: var(--border2); }
+.bar-pos { position: absolute; top: 0; bottom: 0; left: 50%; background: var(--green); border-radius: 0 3px 3px 0; }
+.bar-neg { position: absolute; top: 0; bottom: 0; right: 50%; background: var(--red); border-radius: 3px 0 0 3px; }
+.chart-val { font-family: var(--mono); font-size: 11px; font-weight: 500; min-width: 46px; text-align: right; }
+.chart-val.green { color: var(--green); }
+.chart-val.red { color: var(--red); }
+.chart-val.dim { color: var(--text3); }
+
+/* EMPTY */
+.empty-state { text-align: center; padding: 24px 0; }
+.empty-state i { font-size: 32px; color: var(--text3); display: block; margin-bottom: 8px; }
+.empty-state p { font-size: 13px; color: var(--text3); font-family: var(--mono); }
+
+/* PILL */
+.pill { font-size: 11px; padding: 2px 7px; border-radius: 20px; font-family: var(--mono); font-weight: 500; }
+.pill.green { background: var(--green-bg); color: var(--green); }
+.pill.red { background: var(--red-bg); color: var(--red); }
+
+/* UTILS */
+.mt8 { margin-top: 8px; }
+.mt12 { margin-top: 12px; }
+.mt16 { margin-top: 16px; }
+.text-mono { font-family: var(--mono); }
+.text-sm { font-size: 12px; color: var(--text3); }
+</style>
+</head>
+<body>
+
+<!-- SPLASH / ONBOARDING -->
+<div id="splash">
+  <div class="splash-logo">Hores<span>Mayor</span></div>
+  <div class="splash-sub">Ceràmica Mayor · Registre d'hores</div>
+  <div class="splash-form">
+    <label class="splash-label">Com et diuen?</label>
+    <input class="splash-input" type="text" id="splash-name" placeholder="El teu nom..." maxlength="30" autocomplete="off">
+    <button class="splash-btn" onclick="startApp()">Entrar <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-logo">Hores<span>Mayor</span></div>
+    <div class="header-user">
+      <span id="header-name"></span>
+      <div class="user-avatar" id="user-avatar"></div>
+    </div>
+  </header>
+
+  <!-- REGISTRO -->
+  <div id="tab-registro" class="section active">
+    <div class="kpi-grid" id="kpi-registro"></div>
+
+    <div class="card" id="form-card">
+      <div class="card-title" id="form-card-title">Nova entrada</div>
+      <div id="edit-banner" style="display:none" class="edit-banner">
+        <i class="ti ti-pencil"></i><span id="edit-banner-text"></span>
+      </div>
+      <div class="form-row form-group">
+        <div>
+          <label class="form-label">Data</label>
+          <input class="form-input" type="date" id="r-fecha">
+        </div>
+        <div>
+          <label class="form-label">Hores</label>
+          <div class="slider-wrap">
+            <input type="range" id="r-slider" min="0" max="16" step="0.25" value="1" oninput="syncSlider()">
+            <span class="slider-val" id="r-slider-val">1h 00</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipus</label>
+        <div class="type-toggle">
+          <button class="type-btn sel-pos" id="btn-pos" onclick="setTipo('pos')"><i class="ti ti-plus"></i> Extra</button>
+          <button class="type-btn" id="btn-neg" onclick="setTipo('neg')"><i class="ti ti-minus"></i> Eixida anticipada</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripció (opcional)</label>
+        <input class="form-input" type="text" id="r-desc" placeholder="Reunió, guàrdia, metge...">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="form-btn" onclick="submitForm()">
+          <i class="ti ti-plus" id="form-btn-icon"></i><span id="form-btn-label">Afegir</span>
+        </button>
+        <button class="btn btn-ghost" id="cancel-btn" style="display:none" onclick="cancelEdit()">
+          <i class="ti ti-x"></i> Cancel·lar
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-header">
+        <span class="sec-title" id="reg-month-label"></span>
+        <div class="nav-arrows">
+          <button class="arrow-btn" onclick="changeMonth(-1)"><i class="ti ti-chevron-left"></i></button>
+          <button class="arrow-btn" onclick="changeMonth(1)"><i class="ti ti-chevron-right"></i></button>
+        </div>
+      </div>
+      <div class="entry-list" id="entry-list"></div>
+    </div>
+  </div>
+
+  <!-- RESUMEN -->
+  <div id="tab-resumen" class="section">
+    <div class="kpi-grid" id="kpi-resumen"></div>
+    <div class="card">
+      <div class="sec-header">
+        <span class="sec-title" id="res-month-label"></span>
+        <div class="nav-arrows">
+          <button class="arrow-btn" onclick="changeMonth(-1);render()"><i class="ti ti-chevron-left"></i></button>
+          <button class="arrow-btn" onclick="changeMonth(1);render()"><i class="ti ti-chevron-right"></i></button>
+        </div>
+      </div>
+      <div id="resumen-detail"></div>
+    </div>
+  </div>
+
+  <!-- CALENDARIO -->
+  <div id="tab-calendario" class="section">
+    <div class="kpi-grid cols4" id="kpi-cal"></div>
+    <div class="card">
+      <div class="sec-header">
+        <span class="sec-title" id="cal-title"></span>
+        <div class="nav-arrows">
+          <button class="arrow-btn" onclick="changeCalMonth(-1)"><i class="ti ti-chevron-left"></i></button>
+          <button class="arrow-btn" onclick="changeCalMonth(1)"><i class="ti ti-chevron-right"></i></button>
+        </div>
+      </div>
+      <div class="cal-dow-row">
+        <div class="cal-dow">Dl</div><div class="cal-dow">Dt</div><div class="cal-dow">Dc</div>
+        <div class="cal-dow">Dj</div><div class="cal-dow">Dv</div>
+        <div class="cal-dow" style="opacity:.35">Ds</div><div class="cal-dow" style="opacity:.35">Dg</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>Extra</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div>Eixida</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--teal)"></div>Vacances</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--red);opacity:.5"></div>Festiu CV</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--amber)"></div>Festiu local</div>
+      </div>
+    </div>
+    <div id="cal-detail" style="display:none" class="detail-panel"></div>
+
+    <!-- Festivos -->
+    <div class="card">
+      <div class="card-title">Festius — <span id="festivos-year"></span></div>
+      <button class="api-load-btn" id="btn-api" onclick="loadFestivosAPI()">
+        <i class="ti ti-world"></i> Carregar festius CV des de l'API
+      </button>
+      <div id="api-status" class="api-status"></div>
+      <div class="festivo-tags" id="festivos-lista"></div>
+      <div class="divider"></div>
+      <div class="card-title">Afegir festiu local</div>
+      <div class="form-row">
+        <div>
+          <label class="form-label">Data</label>
+          <input class="form-input" type="date" id="f-fecha">
+        </div>
+        <div>
+          <label class="form-label">Nom</label>
+          <input class="form-input" type="text" id="f-nombre" placeholder="Sant Antoni...">
+        </div>
+      </div>
+      <button class="btn btn-ghost mt8" onclick="addFestivoLocal()">
+        <i class="ti ti-plus"></i> Afegir festiu local
+      </button>
+    </div>
+  </div>
+
+  <!-- ANUAL -->
+  <div id="tab-anual" class="section">
+    <div class="kpi-grid" id="kpi-anual"></div>
+    <div class="card">
+      <div class="sec-header">
+        <span class="sec-title" id="anual-title"></span>
+        <div class="nav-arrows">
+          <button class="arrow-btn" onclick="changeAnualYear(-1)"><i class="ti ti-chevron-left"></i></button>
+          <button class="arrow-btn" onclick="changeAnualYear(1)"><i class="ti ti-chevron-right"></i></button>
+        </div>
+      </div>
+      <div id="anual-chart"></div>
+      <div id="anual-tabla"></div>
+    </div>
+  </div>
+
+  <!-- PAGO -->
+  <div id="tab-pago" class="section">
+    <div class="card">
+      <div class="card-title">Configuració de pagament</div>
+      <div class="form-row form-group">
+        <div>
+          <label class="form-label">Mes</label>
+          <input class="form-input" type="month" id="p-mes">
+        </div>
+        <div>
+          <label class="form-label">Hores pagades</label>
+          <input class="form-input" type="number" id="p-pagadas" min="0" step="0.25">
+        </div>
+      </div>
+      <div class="form-row form-group">
+        <div>
+          <label class="form-label">Preu/hora real (€)</label>
+          <input class="form-input" type="number" id="p-real" min="0" step="0.01">
+        </div>
+        <div>
+          <label class="form-label">Preu/hora estimat (€)</label>
+          <input class="form-input" type="number" id="p-est" min="0" step="0.01">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="savePago()">
+        <i class="ti ti-device-floppy"></i> Guardar
+      </button>
+    </div>
+    <div class="card">
+      <div class="card-title">Comparativa per mes</div>
+      <div id="pago-lista"></div>
+    </div>
+  </div>
+
+  <!-- VACACIONES -->
+  <div id="tab-vacaciones" class="section">
+    <div id="vac-contadores"></div>
+    <div class="card">
+      <div class="card-title">Quota de dies per any</div>
+      <div class="form-row form-group">
+        <div>
+          <label class="form-label">Any</label>
+          <input class="form-input" type="number" id="vc-anio" min="2020" max="2040" placeholder="2026">
+        </div>
+        <div>
+          <label class="form-label">Dies totals</label>
+          <input class="form-input" type="number" id="vc-dies" min="0" placeholder="27">
+        </div>
+      </div>
+      <div class="text-sm mt8">Inclou els dies d'enguany més els arrossegats de l'any anterior.</div>
+      <button class="btn btn-primary mt12" onclick="saveVacCupo()">
+        <i class="ti ti-device-floppy"></i> Guardar quota
+      </button>
+    </div>
+    <div class="card">
+      <div class="card-title">Registrar període</div>
+      <div class="form-row form-group">
+        <div>
+          <label class="form-label">Des de</label>
+          <input class="form-input" type="date" id="v-desde">
+        </div>
+        <div>
+          <label class="form-label">Fins a</label>
+          <input class="form-input" type="date" id="v-hasta">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripció</label>
+        <input class="form-input" type="text" id="v-desc" placeholder="Estiu, Nadal, pont...">
+      </div>
+      <button class="btn btn-primary" onclick="addVac()">
+        <i class="ti ti-plus"></i> Afegir període
+      </button>
+    </div>
+    <div class="card">
+      <div class="card-title">Períodes registrats</div>
+      <div id="vac-lista"></div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="app-nav">
+    <button class="nav-item active" onclick="showTab('registro',event)">
+      <i class="ti ti-clock"></i>Registre
+    </button>
+    <button class="nav-item" onclick="showTab('resumen',event)">
+      <i class="ti ti-chart-bar"></i>Resum
+    </button>
+    <button class="nav-item" onclick="showTab('calendario',event)">
+      <i class="ti ti-calendar"></i>Calendari
+    </button>
+    <button class="nav-item" onclick="showTab('anual',event)">
+      <i class="ti ti-calendar-stats"></i>Anual
+    </button>
+    <button class="nav-item" onclick="showTab('pago',event)">
+      <i class="ti ti-coin"></i>Pagament
+    </button>
+    <button class="nav-item" onclick="showTab('vacaciones',event)">
+      <i class="ti ti-beach"></i>Vacances
+    </button>
+  </nav>
+</div>
+
+<script>
+const MONTHS=['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
+const MONTHS_S=['Gen','Feb','Mar','Abr','Mai','Jun','Jul','Ago','Set','Oct','Nov','Des'];
+const DAYS=['Dl','Dt','Dc','Dj','Dv','Ds','Dg'];
+
+let userName='';
+let state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[]};
+let viewMonth=new Date().getMonth(),viewYear=new Date().getFullYear();
+let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
+let anualYear=new Date().getFullYear();
+let currentTipo='pos',editingId=null,selectedDate=null;
+
+function loadAll(){
+  try{
+    const u=localStorage.getItem('hm_user');
+    if(u)userName=u;
+    const s=localStorage.getItem('hm_state');
+    if(s){
+      const parsed=JSON.parse(s);
+      state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[],...parsed};
+    }
+  }catch(e){}
+}
+function saveAll(){
+  try{
+    localStorage.setItem('hm_user',userName);
+    localStorage.setItem('hm_state',JSON.stringify(state));
+  }catch(e){}
+}
+
+function startApp(){
+  const name=document.getElementById('splash-name').value.trim();
+  if(!name)return;
+  userName=name;
+  saveAll();
+  initApp();
+}
+document.getElementById('splash-name').addEventListener('keypress',e=>{if(e.key==='Enter')startApp();});
+
+function initApp(){
+  document.getElementById('splash').classList.add('hidden');
+  setTimeout(()=>document.getElementById('splash').style.display='none',400);
+  document.getElementById('app').style.display='block';
+  document.getElementById('header-name').textContent=userName;
+  document.getElementById('user-avatar').textContent=userName.slice(0,2).toUpperCase();
+  document.getElementById('r-fecha').value=today();
+  document.getElementById('p-mes').value=new Date().toISOString().slice(0,7);
+  document.getElementById('vc-anio').value=new Date().getFullYear();
+  syncSlider();
+  render();
+}
+
+function today(){return new Date().toISOString().slice(0,10);}
+function fmtH(n){const s=n<0?'−':'';const a=Math.abs(n);const h=Math.floor(a),m=Math.round((a-h)*60);return s+h+'h '+m.toString().padStart(2,'0');}
+function fmtEur(n){return parseFloat(n).toFixed(2).replace('.',',')+'€';}
+function ds(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
+
+function setTipo(t){
+  currentTipo=t;
+  document.getElementById('btn-pos').className='type-btn'+(t==='pos'?' sel-pos':'');
+  document.getElementById('btn-neg').className='type-btn'+(t==='neg'?' sel-neg':'');
+}
+function syncSlider(){
+  const v=parseFloat(document.getElementById('r-slider').value);
+  const h=Math.floor(v),m=Math.round((v-h)*60);
+  document.getElementById('r-slider-val').textContent=h+'h '+m.toString().padStart(2,'0');
+}
+
+function showTab(tab,e){
+  if(editingId!==null)cancelEdit();
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(e&&e.currentTarget)e.currentTarget.classList.add('active');
+  render();
+}
+function showTabById(tab){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const order=['registro','resumen','calendario','anual','pago','vacaciones'];
+  const i=order.indexOf(tab);
+  if(i>=0)document.querySelectorAll('.nav-item')[i].classList.add('active');
+}
+
+function changeMonth(dir){viewMonth+=dir;if(viewMonth<0){viewMonth=11;viewYear--;}if(viewMonth>11){viewMonth=0;viewYear++;}render();}
+function changeCalMonth(dir){calMonth+=dir;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}selectedDate=null;renderCalendario();}
+function changeAnualYear(dir){anualYear+=dir;renderAnual();}
+
+function mEntries(m,y){return state.entries.filter(e=>{const d=new Date(e.fecha+'T00:00:00');return d.getMonth()===m&&d.getFullYear()===y;});}
+function posH(m,y){return mEntries(m,y).filter(e=>e.horas>0).reduce((s,e)=>s+e.horas,0);}
+function negH(m,y){return mEntries(m,y).filter(e=>e.horas<0).reduce((s,e)=>s+e.horas,0);}
+function netH(m,y){return mEntries(m,y).reduce((s,e)=>s+e.horas,0);}
+function netAll(){return state.entries.reduce((s,e)=>s+e.horas,0);}
+function yEntries(y){return state.entries.filter(e=>new Date(e.fecha+'T00:00:00').getFullYear()===y);}
+function isInVac(d){return state.vacaciones.find(v=>d>=v.desde&&d<=v.hasta)||null;}
+function eDateEntries(d){return state.entries.filter(e=>e.fecha===d);}
+function getFestivoAPI(d){const y=d.slice(0,4);return(state.festivosAPI[y]||[]).find(f=>f.fecha===d)||null;}
+function getFestivoLocal(d){return state.festivosLocales.find(f=>f.fecha===d)||null;}
+function diasVacUsados(y){return state.vacaciones.filter(v=>new Date(v.desde+'T00:00:00').getFullYear()===y).reduce((s,v)=>s+v.dias,0);}
+
+function startEdit(id){
+  const e=state.entries.find(e=>e.id===id);if(!e)return;
+  editingId=id;
+  document.getElementById('r-fecha').value=e.fecha;
+  document.getElementById('r-slider').value=Math.abs(e.horas);syncSlider();
+  setTipo(e.horas>=0?'pos':'neg');
+  document.getElementById('r-desc').value=e.desc||'';
+  document.getElementById('form-card-title').textContent='Editar entrada';
+  document.getElementById('form-btn').className='btn btn-primary edit';
+  document.getElementById('form-btn-icon').className='ti ti-check';
+  document.getElementById('form-btn-label').textContent='Guardar canvis';
+  document.getElementById('cancel-btn').style.display='flex';
+  const d=new Date(e.fecha+'T00:00:00');
+  document.getElementById('edit-banner-text').textContent='Editant el '+d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+  document.getElementById('edit-banner').style.display='flex';
+  showTabById('registro');render();
+  setTimeout(()=>document.getElementById('form-card').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+function cancelEdit(){editingId=null;resetForm();render();}
+function resetForm(){
+  editingId=null;
+  document.getElementById('r-fecha').value=today();
+  document.getElementById('r-slider').value=1;syncSlider();
+  document.getElementById('r-desc').value='';setTipo('pos');
+  document.getElementById('form-card-title').textContent='Nova entrada';
+  document.getElementById('form-btn').className='btn btn-primary';
+  document.getElementById('form-btn-icon').className='ti ti-plus';
+  document.getElementById('form-btn-label').textContent='Afegir';
+  document.getElementById('cancel-btn').style.display='none';
+  document.getElementById('edit-banner').style.display='none';
+}
+function submitForm(){
+  const fecha=document.getElementById('r-fecha').value;
+  const sv=parseFloat(document.getElementById('r-slider').value);
+  const desc=document.getElementById('r-desc').value.trim();
+  if(!fecha||sv===0)return alert('Introdueix data i hores vàlides.');
+  const horas=currentTipo==='neg'?-sv:sv;
+  if(editingId!==null){const i=state.entries.findIndex(e=>e.id===editingId);if(i!==-1)state.entries[i]={...state.entries[i],fecha,horas,desc};}
+  else state.entries.push({id:Date.now(),fecha,horas,desc});
+  state.entries.sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  resetForm();saveAll();render();
+}
+function deleteEntry(id){if(editingId===id)cancelEdit();state.entries=state.entries.filter(e=>e.id!==id);saveAll();render();}
+
+async function loadFestivosAPI(){
+  const y=calYear;
+  const btn=document.getElementById('btn-api');
+  const status=document.getElementById('api-status');
+  btn.disabled=true;btn.innerHTML='<i class="ti ti-refresh"></i> Carregant...';
+  status.className='api-status';status.textContent='';
+  try{
+    const res=await fetch(`https://date.nager.at/api/v3/publicholidays/${y}/ES`);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    const cv=data.filter(h=>h.global||!h.counties||h.counties.some(c=>['ES-VC','ES-V','ES-A','ES-CS'].includes(c)));
+    state.festivosAPI[String(y)]=cv.map(h=>({fecha:h.date,nombre:h.localName||h.name,global:h.global}));
+    saveAll();
+    status.className='api-status ok';status.textContent='✓ '+cv.length+' festius carregats per a '+y;
+    setTimeout(()=>{status.className='api-status';status.textContent='';},3000);
+  }catch(err){
+    status.className='api-status err';status.textContent='✗ Error de connexió. Comprova internet.';
+  }
+  btn.disabled=false;btn.innerHTML='<i class="ti ti-world"></i> Carregar festius CV des de l\'API';
+  render();
+}
+function addFestivoLocal(){
+  const fecha=document.getElementById('f-fecha').value;
+  const nombre=document.getElementById('f-nombre').value.trim()||'Festiu local';
+  if(!fecha)return alert('Selecciona una data.');
+  if(state.festivosLocales.find(f=>f.fecha===fecha))return alert('Ja existeix un festiu local en aquesta data.');
+  state.festivosLocales.push({fecha,nombre});
+  state.festivosLocales.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  document.getElementById('f-fecha').value='';document.getElementById('f-nombre').value='';
+  saveAll();render();
+}
+function deleteFestivoLocal(fecha){state.festivosLocales=state.festivosLocales.filter(f=>f.fecha!==fecha);saveAll();render();}
+function deleteFestivoAPI(fecha,y){const l=state.festivosAPI[String(y)]||[];state.festivosAPI[String(y)]=l.filter(f=>f.fecha!==fecha);saveAll();render();}
+
+function saveVacCupo(){
+  const anio=parseInt(document.getElementById('vc-anio').value);
+  const dies=parseInt(document.getElementById('vc-dies').value);
+  if(isNaN(anio)||isNaN(dies)||dies<0)return alert('Introdueix un any i dies vàlids.');
+  state.vacCupos=state.vacCupos.filter(c=>c.anio!==anio);
+  state.vacCupos.push({anio,dies});state.vacCupos.sort((a,b)=>b.anio-a.anio);
+  document.getElementById('vc-anio').value='';document.getElementById('vc-dies').value='';
+  saveAll();render();
+}
+function deleteVacCupo(anio){state.vacCupos=state.vacCupos.filter(c=>c.anio!==anio);saveAll();render();}
+function addVac(){
+  const desde=document.getElementById('v-desde').value,hasta=document.getElementById('v-hasta').value;
+  const desc=document.getElementById('v-desc').value.trim()||'Vacances';
+  if(!desde||!hasta||desde>hasta)return alert('Introdueix un rang de dates vàlid.');
+  const dies=Math.round((new Date(hasta)-new Date(desde))/86400000)+1;
+  state.vacaciones.push({id:Date.now(),desde,hasta,desc,dies});
+  state.vacaciones.sort((a,b)=>b.desde.localeCompare(a.desde));
+  document.getElementById('v-desde').value='';document.getElementById('v-hasta').value='';document.getElementById('v-desc').value='';
+  saveAll();render();
+}
+function deleteVac(id){state.vacaciones=state.vacaciones.filter(v=>v.id!==id);saveAll();render();}
+function savePago(){
+  const mes=document.getElementById('p-mes').value;
+  const pag=parseFloat(document.getElementById('p-pagadas').value);
+  const pr=parseFloat(document.getElementById('p-real').value);
+  const pe=parseFloat(document.getElementById('p-est').value);
+  if(!mes||isNaN(pag)||isNaN(pr)||isNaN(pe))return alert('Omple tots els camps.');
+  const[y,m]=mes.split('-').map(Number);
+  const net=netH(m-1,y);
+  state.pagos=state.pagos.filter(p=>p.mes!==mes);
+  state.pagos.push({mes,pagadas:pag,precioReal:pr,precioEst:pe,netAcum:net});
+  state.pagos.sort((a,b)=>b.mes.localeCompare(a.mes));
+  document.getElementById('p-pagadas').value='';document.getElementById('p-real').value='';document.getElementById('p-est').value='';
+  saveAll();render();
+}
+
+function render(){renderRegistro();renderResumen();renderCalendario();renderAnual();renderPago();renderVacaciones();}
+
+function renderRegistro(){
+  const m=viewMonth,y=viewYear;
+  document.getElementById('reg-month-label').textContent=MONTHS[m]+' '+y;
+  const pos=posH(m,y),neg=negH(m,y),net=pos+neg,all=netAll();
+  document.getElementById('kpi-registro').innerHTML=`
+    <div class="kpi"><div class="kpi-label">EXTRAS MES</div><div class="kpi-value green small">+${fmtH(pos)}</div></div>
+    <div class="kpi"><div class="kpi-label">ANTICIPADES</div><div class="kpi-value red small">${neg<0?fmtH(neg):'—'}</div></div>
+    <div class="kpi"><div class="kpi-label">NET MES</div><div class="kpi-value ${net>0?'green':net<0?'red':''} small">${fmtH(net)}</div></div>
+    <div class="kpi"><div class="kpi-label">ACUMULAT</div><div class="kpi-value ${all>0?'green':all<0?'red':''} small">${fmtH(all)}</div></div>`;
+  const entries=mEntries(m,y);
+  if(!entries.length){document.getElementById('entry-list').innerHTML='<div class="empty-state"><i class="ti ti-clock-off"></i><p>Sense registres aquest mes</p></div>';return;}
+  document.getElementById('entry-list').innerHTML=entries.map(e=>{
+    const d=new Date(e.fecha+'T00:00:00');
+    const dateStr=d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0');
+    const isPos=e.horas>=0;
+    return`<div class="entry-item${editingId===e.id?' editing':''}">
+      <span class="entry-date">${dateStr}</span>
+      <span class="entry-desc">${e.desc||'—'}</span>
+      <span class="entry-h ${isPos?'pos':'neg'}">${isPos?'+':''}${fmtH(e.horas)}</span>
+      <div class="entry-actions">
+        <button class="icon-btn" onclick="startEdit(${e.id})"><i class="ti ti-pencil"></i></button>
+        <button class="icon-btn del" onclick="deleteEntry(${e.id})"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderResumen(){
+  const m=viewMonth,y=viewYear;
+  document.getElementById('res-month-label').textContent=MONTHS[m]+' '+y;
+  const pos=posH(m,y),neg=negH(m,y),net=pos+neg;
+  const pago=state.pagos.find(p=>{const[py,pm]=p.mes.split('-').map(Number);return py===y&&pm-1===m;});
+  const pag=pago?pago.pagadas:null,diff=pag!==null?net-pag:null;
+  document.getElementById('kpi-resumen').innerHTML=`
+    <div class="kpi"><div class="kpi-label">EXTRAS</div><div class="kpi-value green small">+${fmtH(pos)}</div></div>
+    <div class="kpi"><div class="kpi-label">ANTICIPADES</div><div class="kpi-value red small">${neg<0?fmtH(neg):'—'}</div></div>
+    <div class="kpi"><div class="kpi-label">NET</div><div class="kpi-value ${net>0?'green':net<0?'red':''} small">${fmtH(net)}</div></div>
+    <div class="kpi"><div class="kpi-label">PAGADES</div><div class="kpi-value small">${pag!==null?fmtH(pag):'—'}</div></div>
+    <div class="kpi"><div class="kpi-label">DIFERÈNCIA</div><div class="kpi-value ${diff===null?'':diff>=0?'green':'red'} small">${diff===null?'—':(diff>=0?'+':'')+fmtH(diff)}</div></div>`;
+  const entries=mEntries(m,y);
+  if(!entries.length){document.getElementById('resumen-detail').innerHTML='<div class="empty-state"><i class="ti ti-calendar-off"></i><p>Sense entrades</p></div>';return;}
+  const bw={};
+  entries.forEach(e=>{const d=new Date(e.fecha+'T00:00:00'),ws=new Date(d);ws.setDate(d.getDate()-d.getDay()+1);const k=ws.toISOString().slice(0,10);if(!bw[k])bw[k]={pos:0,neg:0};if(e.horas>=0)bw[k].pos+=e.horas;else bw[k].neg+=e.horas;});
+  let html='';
+  Object.entries(bw).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([wk,v])=>{
+    const d=new Date(wk+'T00:00:00'),wn=v.pos+v.neg,cls=wn>0?'green':wn<0?'red':'';
+    html+=`<div class="sum-row"><span class="sum-lbl">Setmana ${d.getDate()}/${d.getMonth()+1}</span>
+      <span style="display:flex;gap:10px;align-items:center;">
+        ${v.pos>0?`<span class="sum-val green" style="font-size:12px;">+${fmtH(v.pos)}</span>`:''}
+        ${v.neg<0?`<span class="sum-val red" style="font-size:12px;">${fmtH(v.neg)}</span>`:''}
+        <span class="sum-val ${cls}">${wn>=0?'+':''}${fmtH(wn)}</span>
+      </span></div>`;
+  });
+  if(pago){
+    const dH=net-pag,dE=(pago.pagadas*pago.precioReal)-(net*pago.precioEst);
+    html+=`<div class="divider"></div>
+      <div class="sum-row"><span class="sum-lbl">Hores netes</span><span class="sum-val">${fmtH(net)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Hores pagades</span><span class="sum-val">${fmtH(pag)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Diferència hores</span><span class="sum-val ${dH>=0?'green':'red'}">${dH>=0?'+':''}${fmtH(dH)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Preu/hora real</span><span class="sum-val">${fmtEur(pago.precioReal)}/h</span></div>
+      <div class="sum-row"><span class="sum-lbl">Preu/hora estimat</span><span class="sum-val">${fmtEur(pago.precioEst)}/h</span></div>
+      <div class="sum-row"><span class="sum-lbl">Total cobrat</span><span class="sum-val">${fmtEur(pago.pagadas*pago.precioReal)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Total estimat</span><span class="sum-val">${fmtEur(net*pago.precioEst)}</span></div>
+      <div class="sum-row total"><span class="sum-lbl">Diferència econòmica</span><span class="sum-val ${dE>=0?'green':'red'}">${dE>=0?'+':''}${fmtEur(dE)}</span></div>`;
+  }
+  document.getElementById('resumen-detail').innerHTML=html;
+}
+
+function renderCalendario(){
+  const m=calMonth,y=calYear;
+  document.getElementById('cal-title').textContent=MONTHS[m]+' '+y;
+  document.getElementById('festivos-year').textContent=y;
+  const pos=posH(m,y),neg=negH(m,y),net=pos+neg,nc=net>0?'green':net<0?'red':'';
+  document.getElementById('kpi-cal').innerHTML=`
+    <div class="kpi"><div class="kpi-label">EXTRA</div><div class="kpi-value green small">${pos>0?'+':''}${fmtH(pos)}</div></div>
+    <div class="kpi"><div class="kpi-label">EIXIDA</div><div class="kpi-value red small">${neg<0?fmtH(neg):'—'}</div></div>
+    <div class="kpi"><div class="kpi-label">NET</div><div class="kpi-value ${nc} small">${net!==0?(net>0?'+':'')+fmtH(net):'—'}</div></div>
+    <div class="kpi"><div class="kpi-label">DIES</div><div class="kpi-value small">${mEntries(m,y).length}</div></div>`;
+
+  const first=new Date(y,m,1);let sdow=first.getDay();sdow=sdow===0?6:sdow-1;
+  const dim=new Date(y,m+1,0).getDate();const tod=today();
+  const allE=mEntries(m,y);const maxA=Math.max(...allE.map(e=>Math.abs(e.horas)),0.01);
+
+  let html='';
+  for(let i=0;i<sdow;i++)html+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=dim;d++){
+    const dstr=ds(y,m,d);const dow=new Date(y,m,d).getDay();const isWE=dow===0||dow===6;
+    const vac=isInVac(dstr);const fAPI=getFestivoAPI(dstr);const fLocal=getFestivoLocal(dstr);
+    const de=eDateEntries(dstr);const dayNet=de.reduce((s,e)=>s+e.horas,0);const isSel=dstr===selectedDate;
+    let cls='cal-cell';
+    if(isWE)cls+=' weekend';if(dstr===tod)cls+=' today';if(isSel)cls+=' selected';
+    if(fLocal)cls+=' festivo-local';else if(fAPI)cls+=' festivo-api';
+    else if(vac&&de.length===0)cls+=' has-vac';
+    const fest=fLocal||fAPI;
+    let inner=`<div class="day-n">${d}${fLocal?'<span class="f-dot amber"></span>':fAPI?'<span class="f-dot red"></span>':''}</div>`;
+    if(fest&&de.length===0){inner+=`<div class="cal-strip ${fLocal?'fest-local':'fest-api'}">${fest.nombre.slice(0,7)}</div>`;}
+    else if(vac&&de.length===0&&!fest){inner+=`<div class="cal-strip vac">${vac.desc.slice(0,7)}</div>`;}
+    if(de.length>0){
+      const bw=Math.round((Math.abs(dayNet)/maxA)*100);
+      inner+=`<div class="cal-h ${dayNet>=0?'pos':'neg'}">${dayNet>0?'+':''}${fmtH(dayNet)}</div>`;
+      inner+=`<div class="cal-bar ${dayNet>=0?'pos':'neg'}" style="width:${Math.max(bw,20)}%"></div>`;
+    }
+    html+=`<div class="${cls}" onclick="selectCalDay('${dstr}')">${inner}</div>`;
+  }
+  const tot=sdow+dim;const rem=(7-tot%7)%7;for(let i=0;i<rem;i++)html+='<div class="cal-cell empty"></div>';
+  document.getElementById('cal-grid').innerHTML=html;
+
+  // Festivos lista
+  const apiList=state.festivosAPI[String(y)]||[];
+  let fHtml='';
+  if(apiList.length===0){fHtml='<div class="text-sm" style="margin-bottom:8px;">Sense festius CV. Prem el botó per carregar.</div>';}
+  else{apiList.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');fHtml+=`<span class="ftag api"><i class="ti ti-flag" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}<button onclick="deleteFestivoAPI('${f.fecha}','${y}')">×</button></span>`;});}
+  const locals=state.festivosLocales.filter(f=>f.fecha.startsWith(String(y)));
+  locals.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');fHtml+=`<span class="ftag local"><i class="ti ti-map-pin" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}<button onclick="deleteFestivoLocal('${f.fecha}')">×</button></span>`;});
+  document.getElementById('festivos-lista').innerHTML=fHtml;
+
+  // Detail
+  const panel=document.getElementById('cal-detail');
+  if(!selectedDate){panel.style.display='none';return;}
+  const sd2=new Date(selectedDate+'T00:00:00');
+  const dName=DAYS[sd2.getDay()===0?6:sd2.getDay()-1];
+  const dLabel=dName+' '+sd2.getDate()+' de '+MONTHS[sd2.getMonth()]+' de '+sd2.getFullYear();
+  const selE=eDateEntries(selectedDate);const selVac=isInVac(selectedDate);
+  const selFAPI=getFestivoAPI(selectedDate);const selFLocal=getFestivoLocal(selectedDate);
+  const selNet=selE.reduce((s,e)=>s+e.horas,0);
+  let ph=`<div class="detail-head"><span class="detail-date">${dLabel}</span>${selNet!==0?`<span class="detail-net ${selNet>0?'pos':'neg'}">${selNet>0?'+':''}${fmtH(selNet)}</span>`:''}</div>`;
+  if(selFLocal)ph+=`<span class="fest-badge local"><i class="ti ti-map-pin"></i>${selFLocal.nombre}</span>`;
+  else if(selFAPI)ph+=`<span class="fest-badge api"><i class="ti ti-flag"></i>${selFAPI.nombre}</span>`;
+  if(selVac&&selE.length===0)ph+=`<span class="fest-badge vac"><i class="ti ti-beach"></i>${selVac.desc}</span>`;
+  if(selE.length===0&&!selFAPI&&!selFLocal&&!selVac){const dow=sd2.getDay();ph+=`<div class="detail-empty">${dow===0||dow===6?'Cap de setmana':'Sense entrades'}</div>`;}
+  else if(selE.length>0){
+    ph+=`<div class="entry-list" style="margin-top:8px;">`;
+    ph+=selE.map(e=>`<div class="entry-item">
+      <span class="entry-desc">${e.desc||'—'}</span>
+      <span class="entry-h ${e.horas>=0?'pos':'neg'}">${e.horas>0?'+':''}${fmtH(e.horas)}</span>
+      <div class="entry-actions">
+        <button class="icon-btn" onclick="startEdit(${e.id})"><i class="ti ti-pencil"></i></button>
+        <button class="icon-btn del" onclick="deleteEntry(${e.id})"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`).join('');
+    ph+=`</div>`;
+  }
+  panel.innerHTML=ph;panel.style.display='block';
+}
+function selectCalDay(d){selectedDate=selectedDate===d?null:d;renderCalendario();}
+
+function renderAnual(){
+  const y=anualYear;document.getElementById('anual-title').textContent='Resum '+y;
+  const yE=yEntries(y);
+  if(!yE.length){
+    document.getElementById('kpi-anual').innerHTML='';
+    document.getElementById('anual-chart').innerHTML='<div class="empty-state"><i class="ti ti-calendar-off"></i><p>Sense dades per a '+y+'</p></div>';
+    document.getElementById('anual-tabla').innerHTML='';return;
+  }
+  const md=MONTHS_S.map((name,m)=>{const p=posH(m,y),n=negH(m,y),net=p+n;const pago=state.pagos.find(pg=>{const[py,pm]=pg.mes.split('-').map(Number);return py===y&&pm-1===m;});return{name,pos:p,neg:n,net,pagadas:pago?pago.pagadas:null,precioReal:pago?pago.precioReal:0,precioEst:pago?pago.precioEst:0};});
+  const tP=md.reduce((s,d)=>s+d.pos,0),tN=md.reduce((s,d)=>s+d.neg,0),tNet=tP+tN;
+  const tCob=md.reduce((s,d)=>s+(d.pagadas&&d.precioReal?d.pagadas*d.precioReal:0),0);
+  const tEst=md.reduce((s,d)=>s+(d.net>0&&d.precioEst?d.net*d.precioEst:0),0);
+  const tPag=md.reduce((s,d)=>s+(d.pagadas||0),0),dif=tNet-tPag;
+  document.getElementById('kpi-anual').innerHTML=`
+    <div class="kpi"><div class="kpi-label">TOTAL EXTRA</div><div class="kpi-value green small">+${fmtH(tP)}</div></div>
+    <div class="kpi"><div class="kpi-label">ANTICIPADES</div><div class="kpi-value red small">${fmtH(tN)}</div></div>
+    <div class="kpi"><div class="kpi-label">NET ANUAL</div><div class="kpi-value ${tNet>0?'green':tNet<0?'red':''} small">${fmtH(tNet)}</div></div>
+    <div class="kpi"><div class="kpi-label">DIF. PAGAMENT</div><div class="kpi-value ${dif>=0?'green':'red'} small">${dif>=0?'+':''}${fmtH(dif)}</div></div>
+    <div class="kpi"><div class="kpi-label">TOTAL COBRAT</div><div class="kpi-value small">${fmtEur(tCob)}</div></div>
+    <div class="kpi"><div class="kpi-label">TOTAL ESTIMAT</div><div class="kpi-value small">${fmtEur(tEst)}</div></div>`;
+  const mxA=Math.max(...md.map(d=>Math.max(Math.abs(d.pos),Math.abs(d.neg))),0.01);
+  let ch='';
+  md.forEach(d=>{const pw=d.pos>0?(d.pos/mxA*46).toFixed(1):0,nw=d.neg<0?(Math.abs(d.neg)/mxA*46).toFixed(1):0;const noD=d.pos===0&&d.neg===0;const vc=d.net>0?'green':d.net<0?'red':'dim';
+    ch+=`<div class="chart-row"><span class="chart-lbl">${d.name}</span><div class="chart-bar-bg"><div class="chart-mid-line"></div>${d.pos>0?`<div class="bar-pos" style="width:${pw}%"></div>`:''}${d.neg<0?`<div class="bar-neg" style="width:${nw}%"></div>`:''}</div><span class="chart-val ${noD?'dim':vc}">${noD?'—':((d.net>0?'+':'')+fmtH(d.net))}</span></div>`;});
+  document.getElementById('anual-chart').innerHTML=ch;
+  let th='<div class="divider"></div>';
+  md.forEach((d,i)=>{if(d.pos===0&&d.neg===0)return;const pago=state.pagos.find(p=>{const[py,pm]=p.mes.split('-').map(Number);return py===y&&pm-1===i;});const dH=pago?d.net-pago.pagadas:null,cob=pago?pago.pagadas*pago.precioReal:null;
+    th+=`<div class="sum-row"><span class="sum-lbl">${MONTHS[i].slice(0,3)}</span><span style="display:flex;gap:8px;align-items:center;">${d.pos>0?`<span class="sum-val green" style="font-size:12px;">+${fmtH(d.pos)}</span>`:''}${d.neg<0?`<span class="sum-val red" style="font-size:12px;">${fmtH(d.neg)}</span>`:''}<span class="sum-val ${d.net>0?'green':d.net<0?'red':''}">${d.net>0?'+':''}${fmtH(d.net)}</span>${dH!==null?`<span class="pill ${dH>=0?'green':'red'}">${dH>=0?'+':''}${fmtH(dH)}</span>`:''}</span></div>`;});
+  th+=`<div class="sum-row total"><span class="sum-lbl">Total ${y}</span><span style="display:flex;gap:8px;align-items:center;"><span class="sum-val ${tNet>0?'green':tNet<0?'red':''}">${tNet>0?'+':''}${fmtH(tNet)}</span><span class="pill ${dif>=0?'green':'red'}">${dif>=0?'+':''}${fmtH(dif)}</span></span></div>`;
+  document.getElementById('anual-tabla').innerHTML=th;
+}
+
+function renderPago(){
+  if(!state.pagos.length){document.getElementById('pago-lista').innerHTML='<div class="empty-state"><i class="ti ti-coin-off"></i><p>Sense dades de pagament</p></div>';return;}
+  document.getElementById('pago-lista').innerHTML=state.pagos.map(p=>{
+    const[y,m]=p.mes.split('-').map(Number),label=MONTHS[m-1]+' '+y;
+    const diff=p.netAcum-p.pagadas,dE=(p.pagadas*p.precioReal)-(p.netAcum*p.precioEst);
+    return`<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <div style="font-size:14px;font-weight:700;margin-bottom:10px;">${label}</div>
+      <div class="sum-row"><span class="sum-lbl">Hores netes</span><span class="sum-val">${fmtH(p.netAcum)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Hores pagades</span><span class="sum-val">${fmtH(p.pagadas)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Diferència hores</span><span class="sum-val ${diff>=0?'green':'red'}">${diff>=0?'+':''}${fmtH(diff)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Preu real</span><span class="sum-val">${fmtEur(p.precioReal)}/h</span></div>
+      <div class="sum-row"><span class="sum-lbl">Preu estimat</span><span class="sum-val">${fmtEur(p.precioEst)}/h</span></div>
+      <div class="sum-row"><span class="sum-lbl">Total cobrat</span><span class="sum-val">${fmtEur(p.pagadas*p.precioReal)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Total estimat</span><span class="sum-val">${fmtEur(p.netAcum*p.precioEst)}</span></div>
+      <div class="sum-row total"><span class="sum-lbl">Diferència econ.</span><span class="sum-val ${dE>=0?'green':'red'}">${dE>=0?'+':''}${fmtEur(dE)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderVacaciones(){
+  let ch='';
+  state.vacCupos.forEach(c=>{
+    const usats=diasVacUsados(c.anio),queden=c.dies-usats;
+    const pct=Math.min(100,Math.round((usats/c.dies)*100));
+    const barCls=queden<0?'red':queden<=3?'amber':'';
+    const numCls=queden<0?'red':queden<=3?'amber':'green';
+    ch+=`<div class="vac-block">
+      <div class="vac-block-head">
+        <span class="vac-block-year">Vacances ${c.anio}</span>
+        <button class="icon-btn del" onclick="deleteVacCupo(${c.anio})"><i class="ti ti-trash"></i></button>
+      </div>
+      <div class="vac-nums">
+        <div class="vac-num"><div class="vac-num-val">${c.dies}</div><div class="vac-num-label">TOTALS</div></div>
+        <div class="vac-num"><div class="vac-num-val" style="color:var(--text2);">${usats}</div><div class="vac-num-label">GAUDITS</div></div>
+        <div class="vac-num"><div class="vac-num-val ${numCls}">${queden}</div><div class="vac-num-label">${queden>=0?'DISPONIBLES':'EXCEDITS'}</div></div>
+      </div>
+      <div class="progress-bg"><div class="progress-bar ${barCls}" style="width:${pct}%"></div></div>
+      <div class="progress-info"><span>${usats} de ${c.dies} dies</span><span>${pct}%</span></div>
+      ${queden<=3&&queden>=0?`<div class="warn-msg amber">⚠ Queden ${queden} dies.</div>`:''}
+      ${queden<0?`<div class="warn-msg red">⚠ Quota excedida en ${Math.abs(queden)} dies.</div>`:''}
+    </div>`;
+  });
+  document.getElementById('vac-contadores').innerHTML=ch;
+  if(!state.vacaciones.length){document.getElementById('vac-lista').innerHTML='<div class="empty-state"><i class="ti ti-beach-off"></i><p>Sense períodes registrats</p></div>';return;}
+  document.getElementById('vac-lista').innerHTML=state.vacaciones.map(v=>{
+    const d1=new Date(v.desde+'T00:00:00'),d2=new Date(v.hasta+'T00:00:00');
+    const f=d=>d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0');
+    return`<div class="entry-item">
+      <span class="entry-date">${f(d1)}</span>
+      <span class="entry-desc">${v.desc}</span>
+      <span class="pill green">${v.dies}d</span>
+      <button class="icon-btn del" onclick="deleteVac(${v.id})"><i class="ti ti-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+
+// Init
+loadAll();
+if(userName){initApp();}
+else{document.getElementById('splash-name').focus();}
+
+// Service Worker
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
