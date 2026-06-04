@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#1a1a2e">
+<meta name="theme-color" content="#EDEBE7">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="HoresMayor">
 <meta name="description" content="Registra les teues hores extres a Ceràmica Mayor">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
@@ -28,36 +28,36 @@ window.addEventListener('load', function() {
 <title>HoresMayor</title>
 <style>
 :root {
-  --bg: #0f0f1a;
-  --bg2: #1a1a2e;
-  --bg3: #16213e;
-  --surface: #1e1e35;
-  --surface2: #252540;
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.15);
-  --text: #f0f0f5;
-  --text2: rgba(240,240,245,0.6);
-  --text3: rgba(240,240,245,0.35);
-  --accent: #e8c547;
-  --accent2: #f0d060;
-  --green: #4ade80;
-  --green-bg: rgba(74,222,128,0.12);
-  --green-border: rgba(74,222,128,0.3);
-  --red: #f87171;
-  --red-bg: rgba(248,113,113,0.12);
-  --red-border: rgba(248,113,113,0.3);
-  --amber: #fbbf24;
-  --amber-bg: rgba(251,191,36,0.12);
-  --amber-border: rgba(251,191,36,0.3);
-  --blue: #60a5fa;
-  --blue-bg: rgba(96,165,250,0.12);
-  --teal: #2dd4bf;
-  --teal-bg: rgba(45,212,191,0.12);
+  --bg: #EDEBE7;
+  --bg2: #fff;
+  --bg3: #F7F5F2;
+  --surface: #fff;
+  --surface2: #F7F5F2;
+  --border: #E2DDD7;
+  --border2: #D4CEC7;
+  --text: #1a1a1a;
+  --text2: #666;
+  --text3: #aaa;
+  --accent: #C4622D;
+  --accent2: #D4733E;
+  --green: #2A7D4F;
+  --green-bg: #EDF7F2;
+  --green-border: #B6DFC8;
+  --red: #C0392B;
+  --red-bg: #FDECEA;
+  --red-border: #F0B8B3;
+  --amber: #B45309;
+  --amber-bg: #FEF3C7;
+  --amber-border: #FCD34D;
+  --blue: #2563EB;
+  --blue-bg: #EFF6FF;
+  --teal: #0D9488;
+  --teal-bg: #F0FDFA;
   --radius: 12px;
-  --radius-sm: 8px;
+  --radius-sm: 10px;
   --radius-lg: 16px;
-  --font: 'Syne', sans-serif;
-  --mono: 'DM Mono', monospace;
+  --font: 'Inter', system-ui, sans-serif;
+  --mono: 'Inter', system-ui, sans-serif;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -98,7 +98,7 @@ body {
 }
 .splash-input:focus { border-color: var(--accent); }
 .splash-btn {
-  width: 100%; margin-top: 12px; background: var(--accent); color: #0f0f1a;
+  width: 100%; margin-top: 12px; background: var(--accent); color: #fff;
   border: none; border-radius: var(--radius); padding: 15px;
   font-family: var(--font); font-size: 16px; font-weight: 700;
   cursor: pointer; letter-spacing: 0.5px;
@@ -109,19 +109,22 @@ body {
 /* HEADER */
 .app-header {
   position: sticky; top: 0; z-index: 100;
-  background: var(--bg); border-bottom: 1px solid var(--border);
+  background: var(--surface); border-bottom: 1px solid var(--border);
   padding: calc(var(--safe-top) + 12px) 20px 12px;
   display: flex; align-items: center; justify-content: space-between;
 }
 .header-logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
 .header-logo span { color: var(--accent); }
-.header-user { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+.header-user { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); transition: opacity 0.15s; }
+.header-user:active { opacity: 0.7; }
 .user-avatar {
   width: 30px; height: 30px; border-radius: 50%;
-  background: var(--accent); color: #0f0f1a;
+  background: var(--accent); color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 700; letter-spacing: 0;
+  transition: box-shadow 0.15s;
 }
+.user-avatar.in-ajustos { box-shadow: 0 0 0 2px var(--accent), 0 0 0 4px var(--surface); }
 
 /* NAV */
 .app-nav {
@@ -140,7 +143,7 @@ body {
 .nav-item.active { color: var(--accent); }
 
 /* SECCIONES */
-.section { display: none; padding: 16px 16px 0; }
+.section { display: none; padding: 16px 16px 0; min-height: calc(100vh - 60px); }
 .section.active { display: block; }
 
 /* CARDS */
@@ -185,7 +188,7 @@ body {
   cursor: pointer; transition: all 0.15s; text-align: center;
 }
 .qchip:active { transform: scale(0.95); }
-.qchip.active { background: var(--accent); color: #0f0f1a; border-color: var(--accent); font-weight: 700; }
+.qchip.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
 .qchip-more { flex: 0.6; font-family: var(--font); font-size: 18px; }
 .qchip-more.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
 
@@ -215,7 +218,7 @@ body {
   transition: opacity 0.2s, transform 0.1s;
 }
 .btn:active { opacity: 0.85; transform: scale(0.98); }
-.btn-primary { background: var(--accent); color: #0f0f1a; }
+.btn-primary { background: var(--accent); color: #fff; }
 .btn-primary.edit { background: var(--blue); color: #fff; }
 .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); margin-top: 8px; }
 .btn-row { display: flex; gap: 8px; }
@@ -418,7 +421,7 @@ body {
   <!-- HEADER -->
   <header class="app-header">
     <div class="header-logo">Hores<span>Mayor</span></div>
-    <div class="header-user">
+    <div class="header-user" onclick="toggleAjustos()" style="cursor:pointer;" title="Ajustos">
       <span id="header-name"></span>
       <div class="user-avatar" id="user-avatar"></div>
     </div>
@@ -426,8 +429,6 @@ body {
 
   <!-- REGISTRO -->
   <div id="tab-registro" class="section active">
-    <div class="kpi-grid" id="kpi-registro"></div>
-
     <div class="card" id="form-card">
       <div class="card-title" id="form-card-title">Nova entrada</div>
       <div id="edit-banner" style="display:none" class="edit-banner">
@@ -474,13 +475,7 @@ body {
     </div>
 
     <div class="card">
-      <div class="sec-header">
-        <span class="sec-title" id="reg-month-label"></span>
-        <div class="nav-arrows">
-          <button class="arrow-btn" onclick="changeMonth(-1)"><i class="ti ti-chevron-left"></i></button>
-          <button class="arrow-btn" onclick="changeMonth(1)"><i class="ti ti-chevron-right"></i></button>
-        </div>
-      </div>
+      <div class="card-title">Últims 10 registres</div>
       <div class="entry-list" id="entry-list"></div>
     </div>
   </div>
@@ -496,6 +491,7 @@ body {
           <button class="arrow-btn" onclick="changeMonth(1);render()"><i class="ti ti-chevron-right"></i></button>
         </div>
       </div>
+      <div id="resum-chart" style="margin-bottom:16px;"></div>
       <div id="resumen-detail"></div>
     </div>
   </div>
@@ -527,29 +523,13 @@ body {
     </div>
     <div id="cal-detail" style="display:none" class="detail-panel"></div>
 
-    <!-- Festivos -->
+    <!-- Festivos - solo lista, gestión en Ajustos -->
     <div class="card">
-      <div class="card-title">Festius — <span id="festivos-year"></span></div>
-      <button class="api-load-btn" id="btn-api" onclick="loadFestivosAPI()">
-        <i class="ti ti-world"></i> Carregar festius CV des de l'API
-      </button>
-      <div id="api-status" class="api-status"></div>
-      <div class="festivo-tags" id="festivos-lista"></div>
-      <div class="divider"></div>
-      <div class="card-title">Afegir festiu local</div>
-      <div class="form-row">
-        <div>
-          <label class="form-label">Data</label>
-          <input class="form-input" type="date" id="f-fecha">
-        </div>
-        <div>
-          <label class="form-label">Nom</label>
-          <input class="form-input" type="text" id="f-nombre" placeholder="Sant Antoni...">
-        </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="card-title" style="margin-bottom:0;">Festius — <span id="festivos-year"></span></div>
+        <button onclick="toggleAjustos()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:var(--mono);display:flex;align-items:center;gap:4px;"><i class="ti ti-settings" style="font-size:14px;"></i> Gestionar</button>
       </div>
-      <button class="btn btn-ghost mt8" onclick="addFestivoLocal()">
-        <i class="ti ti-plus"></i> Afegir festiu local
-      </button>
+      <div class="festivo-tags" id="festivos-lista"></div>
     </div>
   </div>
 
@@ -565,7 +545,6 @@ body {
         </div>
       </div>
       <div id="anual-chart"></div>
-      <div id="anual-tabla"></div>
     </div>
   </div>
 
@@ -583,16 +562,11 @@ body {
           <input class="form-input" type="number" id="p-pagadas" min="0" step="0.25">
         </div>
       </div>
-      <div class="form-row form-group">
-        <div>
-          <label class="form-label">Preu/hora real (€)</label>
-          <input class="form-input" type="number" id="p-real" min="0" step="0.01">
-        </div>
-        <div>
-          <label class="form-label">Preu/hora estimat (€)</label>
-          <input class="form-input" type="number" id="p-est" min="0" step="0.01">
-        </div>
+      <div class="form-group">
+        <label class="form-label">Import total cobrat (€)</label>
+        <input class="form-input" type="number" id="p-import" min="0" step="0.01" placeholder="0,00">
       </div>
+      <div style="font-size:12px;color:var(--text3);margin-top:-8px;margin-bottom:12px;">El preu/hora es calcularà automàticament (import ÷ hores pagades)</div>
       <button class="btn btn-primary" onclick="savePago()">
         <i class="ti ti-device-floppy"></i> Guardar
       </button>
@@ -691,6 +665,35 @@ body {
       <div id="backup-status" style="display:none;margin-top:10px;font-size:13px;font-family:var(--mono);padding:10px;border-radius:var(--radius-sm);"></div>
     </div>
 
+    <!-- Festius -->
+    <div class="card">
+      <div class="card-title">Festius laborals</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6;">
+        Carrega els festius oficials de la Comunitat Valenciana automàticament per a l'any del calendari actiu.
+      </div>
+      <button class="api-load-btn" id="btn-api" onclick="loadFestivosAPI()">
+        <i class="ti ti-world"></i> Carregar festius CV des de l'API
+      </button>
+      <div id="api-status" class="api-status"></div>
+      <div class="divider"></div>
+      <div class="card-title">Festiu local</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px;">Afegeix els dos festius locals del teu municipi.</div>
+      <div class="form-row">
+        <div>
+          <label class="form-label">Data</label>
+          <input class="form-input" type="date" id="f-fecha">
+        </div>
+        <div>
+          <label class="form-label">Nom</label>
+          <input class="form-input" type="text" id="f-nombre" placeholder="Sant Antoni...">
+        </div>
+      </div>
+      <button class="btn btn-ghost mt8" onclick="addFestivoLocal()">
+        <i class="ti ti-plus"></i> Afegir festiu local
+      </button>
+      <div class="festivo-tags" id="festivos-lista-ajustos" style="margin-top:10px;"></div>
+    </div>
+
     <!-- Importar Excel -->
     <div class="card">
       <div class="card-title">Importar des de Excel</div>
@@ -729,9 +732,6 @@ body {
     </button>
     <button class="nav-item" onclick="showTab('vacaciones',event)">
       <i class="ti ti-beach"></i>Vacances
-    </button>
-    <button class="nav-item" onclick="showTab('ajustos',event)">
-      <i class="ti ti-settings"></i>Ajustos
     </button>
   </nav>
 </div>
@@ -860,9 +860,29 @@ function showTabById(tab){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  const order=['registro','resumen','calendario','anual','pago','vacaciones','ajustos'];
+  const order=['registro','resumen','calendario','anual','pago','vacaciones'];
   const i=order.indexOf(tab);
   if(i>=0)document.querySelectorAll('.nav-item')[i].classList.add('active');
+  // Marcar avatar si estamos en ajustos
+  const av=document.getElementById('user-avatar');
+  if(av)av.classList.toggle('in-ajustos', tab==='ajustos');
+}
+
+let lastTabBeforeAjustos='registro';
+function toggleAjustos(){
+  const ajActive=document.getElementById('tab-ajustos').classList.contains('active');
+  if(ajActive){
+    showTabById(lastTabBeforeAjustos);
+  } else {
+    // Guardar la pestaña actual
+    const order=['registro','resumen','calendario','anual','pago','vacaciones'];
+    for(const t of order){
+      if(document.getElementById('tab-'+t).classList.contains('active')){lastTabBeforeAjustos=t;break;}
+    }
+    if(editingId!==null)cancelEdit();
+    showTabById('ajustos');
+    renderAjustos();
+  }
 }
 
 function changeMonth(dir){viewMonth+=dir;if(viewMonth<0){viewMonth=11;viewYear--;}if(viewMonth>11){viewMonth=0;viewYear++;}render();}
@@ -940,6 +960,8 @@ async function loadFestivosAPI(){
     saveAll();
     status.className='api-status ok';status.textContent='✓ '+cv.length+' festius carregats per a '+y;
     setTimeout(()=>{status.className='api-status';status.textContent='';},3000);
+    renderFestivosAjustos(y);
+    renderCalendario();
   }catch(err){
     status.className='api-status err';status.textContent='✗ Error de connexió. Comprova internet.';
   }
@@ -954,7 +976,7 @@ function addFestivoLocal(){
   state.festivosLocales.push({fecha,nombre});
   state.festivosLocales.sort((a,b)=>a.fecha.localeCompare(b.fecha));
   document.getElementById('f-fecha').value='';document.getElementById('f-nombre').value='';
-  saveAll();render();
+  saveAll();renderFestivosAjustos(calYear);renderCalendario();
 }
 function deleteFestivoLocal(fecha){state.festivosLocales=state.festivosLocales.filter(f=>f.fecha!==fecha);saveAll();render();}
 function deleteFestivoAPI(fecha,y){const l=state.festivosAPI[String(y)]||[];state.festivosAPI[String(y)]=l.filter(f=>f.fecha!==fecha);saveAll();render();}
@@ -983,34 +1005,31 @@ function deleteVac(id){state.vacaciones=state.vacaciones.filter(v=>v.id!==id);sa
 function savePago(){
   const mes=document.getElementById('p-mes').value;
   const pag=parseFloat(document.getElementById('p-pagadas').value);
-  const pr=parseFloat(document.getElementById('p-real').value);
-  const pe=parseFloat(document.getElementById('p-est').value);
-  if(!mes||isNaN(pag)||isNaN(pr)||isNaN(pe))return alert('Omple tots els camps.');
+  const imp=parseFloat(document.getElementById('p-import').value);
+  if(!mes||isNaN(pag)||isNaN(imp))return alert('Omple tots els camps.');
   const[y,m]=mes.split('-').map(Number);
   const net=netH(m-1,y);
+  const preuHora=pag>0?Math.round((imp/pag)*100)/100:0;
   state.pagos=state.pagos.filter(p=>p.mes!==mes);
-  state.pagos.push({mes,pagadas:pag,precioReal:pr,precioEst:pe,netAcum:net});
+  state.pagos.push({mes,pagadas:pag,import:imp,precioReal:preuHora,netAcum:net});
   state.pagos.sort((a,b)=>b.mes.localeCompare(a.mes));
-  document.getElementById('p-pagadas').value='';document.getElementById('p-real').value='';document.getElementById('p-est').value='';
+  document.getElementById('p-pagadas').value='';
+  document.getElementById('p-import').value='';
   saveAll();render();
 }
 
 function render(){renderRegistro();renderResumen();renderCalendario();renderAnual();renderPago();renderVacaciones();renderAjustos();}
 
 function renderRegistro(){
-  const m=viewMonth,y=viewYear;
-  document.getElementById('reg-month-label').textContent=MONTHS[m]+' '+y;
-  const pos=posH(m,y),neg=negH(m,y),net=pos+neg,all=netAll();
-  document.getElementById('kpi-registro').innerHTML=`
-    <div class="kpi"><div class="kpi-label">EXTRAS MES</div><div class="kpi-value green small">+${fmtH(pos)}</div></div>
-    <div class="kpi"><div class="kpi-label">ANTICIPADES</div><div class="kpi-value red small">${neg<0?fmtH(neg):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">NET MES</div><div class="kpi-value ${net>0?'green':net<0?'red':''} small">${fmtH(net)}</div></div>
-    <div class="kpi"><div class="kpi-label">ACUMULAT</div><div class="kpi-value ${all>0?'green':all<0?'red':''} small">${fmtH(all)}</div></div>`;
-  const entries=mEntries(m,y);
-  if(!entries.length){document.getElementById('entry-list').innerHTML='<div class="empty-state"><i class="ti ti-clock-off"></i><p>Sense registres aquest mes</p></div>';return;}
-  document.getElementById('entry-list').innerHTML=entries.map(e=>{
+  // Últims 10 registres de tota l'app, sense agrupar per mes
+  const last10=[...state.entries].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,10);
+  if(!last10.length){
+    document.getElementById('entry-list').innerHTML='<div class="empty-state"><i class="ti ti-clock-off"></i><p>Sense registres encara</p></div>';
+    return;
+  }
+  document.getElementById('entry-list').innerHTML=last10.map(e=>{
     const d=new Date(e.fecha+'T00:00:00');
-    const dateStr=d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0');
+    const dateStr=d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+(d.getFullYear().toString().slice(2));
     const isPos=e.horas>=0;
     return`<div class="entry-item${editingId===e.id?' editing':''}">
       <span class="entry-date">${dateStr}</span>
@@ -1027,40 +1046,60 @@ function renderRegistro(){
 function renderResumen(){
   const m=viewMonth,y=viewYear;
   document.getElementById('res-month-label').textContent=MONTHS[m]+' '+y;
-  const pos=posH(m,y),neg=negH(m,y),net=pos+neg;
+  const net=netH(m,y);
   const pago=state.pagos.find(p=>{const[py,pm]=p.mes.split('-').map(Number);return py===y&&pm-1===m;});
-  const pag=pago?pago.pagadas:null,diff=pag!==null?net-pag:null;
+  const pag=pago?pago.pagadas:null;
+  const nc=net>0?'green':net<0?'red':'';
+
+  // 2 KPIs: neto i pagades
   document.getElementById('kpi-resumen').innerHTML=`
-    <div class="kpi"><div class="kpi-label">EXTRAS</div><div class="kpi-value green small">+${fmtH(pos)}</div></div>
-    <div class="kpi"><div class="kpi-label">ANTICIPADES</div><div class="kpi-value red small">${neg<0?fmtH(neg):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">NET</div><div class="kpi-value ${net>0?'green':net<0?'red':''} small">${fmtH(net)}</div></div>
-    <div class="kpi"><div class="kpi-label">PAGADES</div><div class="kpi-value small">${pag!==null?fmtH(pag):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">DIFERÈNCIA</div><div class="kpi-value ${diff===null?'':diff>=0?'green':'red'} small">${diff===null?'—':(diff>=0?'+':'')+fmtH(diff)}</div></div>`;
+    <div class="kpi"><div class="kpi-label">EXTRAS</div><div class="kpi-value ${nc} small">${net>0?'+':''}${fmtH(net)}</div></div>
+    <div class="kpi"><div class="kpi-label">HORES PAGADES</div><div class="kpi-value small">${pag!==null?fmtH(pag):'—'}</div></div>`;
+
   const entries=mEntries(m,y);
-  if(!entries.length){document.getElementById('resumen-detail').innerHTML='<div class="empty-state"><i class="ti ti-calendar-off"></i><p>Sense entrades</p></div>';return;}
+
+  // Gràfic de barres per setmana
   const bw={};
-  entries.forEach(e=>{const d=new Date(e.fecha+'T00:00:00'),ws=new Date(d);ws.setDate(d.getDate()-d.getDay()+1);const k=ws.toISOString().slice(0,10);if(!bw[k])bw[k]={pos:0,neg:0};if(e.horas>=0)bw[k].pos+=e.horas;else bw[k].neg+=e.horas;});
-  let html='';
-  Object.entries(bw).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([wk,v])=>{
-    const d=new Date(wk+'T00:00:00'),wn=v.pos+v.neg,cls=wn>0?'green':wn<0?'red':'';
-    html+=`<div class="sum-row"><span class="sum-lbl">Setmana ${d.getDate()}/${d.getMonth()+1}</span>
-      <span style="display:flex;gap:10px;align-items:center;">
-        ${v.pos>0?`<span class="sum-val green" style="font-size:12px;">+${fmtH(v.pos)}</span>`:''}
-        ${v.neg<0?`<span class="sum-val red" style="font-size:12px;">${fmtH(v.neg)}</span>`:''}
-        <span class="sum-val ${cls}">${wn>=0?'+':''}${fmtH(wn)}</span>
-      </span></div>`;
+  entries.forEach(e=>{
+    const d=new Date(e.fecha+'T00:00:00'),ws=new Date(d);
+    ws.setDate(d.getDate()-d.getDay()+1);
+    const k=ws.toISOString().slice(0,10);
+    if(!bw[k])bw[k]=0;
+    bw[k]+=e.horas;
   });
+  const weeks=Object.entries(bw).sort((a,b)=>a[0].localeCompare(b[0]));
+  const maxW=Math.max(...weeks.map(([,v])=>Math.abs(v)),0.01);
+
+  let chartHtml='';
+  if(weeks.length>0){
+    weeks.forEach(([wk,wNet])=>{
+      const d=new Date(wk+'T00:00:00');
+      const label=d.getDate()+'/'+(d.getMonth()+1);
+      const barW=Math.round((Math.abs(wNet)/maxW)*100);
+      const cls=wNet>=0?'green':'red';
+      chartHtml+=`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span style="font-size:12px;color:var(--text3);min-width:32px;">${label}</span>
+          <div style="flex:1;height:20px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border);">
+            <div style="height:100%;width:${barW}%;background:var(--${cls});border-radius:4px;transition:width 0.3s;"></div>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:var(--${cls});min-width:52px;text-align:right;">${wNet>0?'+':''}${fmtH(wNet)}</span>
+        </div>`;
+    });
+  } else {
+    chartHtml='<div class="empty-state" style="padding:16px 0;"><i class="ti ti-chart-bar-off"></i><p>Sense dades aquest mes</p></div>';
+  }
+  document.getElementById('resum-chart').innerHTML=chartHtml;
+
+  // Part econòmica
+  let html='';
   if(pago){
-    const dH=net-pag,dE=(pago.pagadas*pago.precioReal)-(net*pago.precioEst);
+    const preuHora=pago.pagadas>0?(pago.import/pago.pagadas):0;
     html+=`<div class="divider"></div>
-      <div class="sum-row"><span class="sum-lbl">Hores netes</span><span class="sum-val">${fmtH(net)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Hores netes treballades</span><span class="sum-val">${fmtH(net)}</span></div>
       <div class="sum-row"><span class="sum-lbl">Hores pagades</span><span class="sum-val">${fmtH(pag)}</span></div>
-      <div class="sum-row"><span class="sum-lbl">Diferència hores</span><span class="sum-val ${dH>=0?'green':'red'}">${dH>=0?'+':''}${fmtH(dH)}</span></div>
-      <div class="sum-row"><span class="sum-lbl">Preu/hora real</span><span class="sum-val">${fmtEur(pago.precioReal)}/h</span></div>
-      <div class="sum-row"><span class="sum-lbl">Preu/hora estimat</span><span class="sum-val">${fmtEur(pago.precioEst)}/h</span></div>
-      <div class="sum-row"><span class="sum-lbl">Total cobrat</span><span class="sum-val">${fmtEur(pago.pagadas*pago.precioReal)}</span></div>
-      <div class="sum-row"><span class="sum-lbl">Total estimat</span><span class="sum-val">${fmtEur(net*pago.precioEst)}</span></div>
-      <div class="sum-row total"><span class="sum-lbl">Diferència econòmica</span><span class="sum-val ${dE>=0?'green':'red'}">${dE>=0?'+':''}${fmtEur(dE)}</span></div>`;
+      <div class="sum-row"><span class="sum-lbl">Import cobrat</span><span class="sum-val">${fmtEur(pago.import)}</span></div>
+      <div class="sum-row total"><span class="sum-lbl">Preu/hora resultant</span><span class="sum-val accent" style="color:var(--accent);">${fmtEur(preuHora)}/h</span></div>`;
   }
   document.getElementById('resumen-detail').innerHTML=html;
 }
@@ -1104,14 +1143,19 @@ function renderCalendario(){
   const tot=sdow+dim;const rem=(7-tot%7)%7;for(let i=0;i<rem;i++)html+='<div class="cal-cell empty"></div>';
   document.getElementById('cal-grid').innerHTML=html;
 
-  // Festivos lista
+  // Festivos lista — en calendario (compacta, solo badges) y en Ajustos (completa con gestión)
   const apiList=state.festivosAPI[String(y)]||[];
-  let fHtml='';
-  if(apiList.length===0){fHtml='<div class="text-sm" style="margin-bottom:8px;">Sense festius CV. Prem el botó per carregar.</div>';}
-  else{apiList.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');fHtml+=`<span class="ftag api"><i class="ti ti-flag" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}<button onclick="deleteFestivoAPI('${f.fecha}','${y}')">×</button></span>`;});}
   const locals=state.festivosLocales.filter(f=>f.fecha.startsWith(String(y)));
-  locals.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');fHtml+=`<span class="ftag local"><i class="ti ti-map-pin" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}<button onclick="deleteFestivoLocal('${f.fecha}')">×</button></span>`;});
-  document.getElementById('festivos-lista').innerHTML=fHtml;
+
+  // Lista compacta en calendari (solo muestra, sin gestión)
+  let fHtmlCal='';
+  if(apiList.length===0){fHtmlCal='<div class="text-sm" style="margin-bottom:4px;">Sense festius CV. Gestiona\'ls a Ajustos.</div>';}
+  else{apiList.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');fHtmlCal+=`<span class="ftag api"><i class="ti ti-flag" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}</span>`;});}
+  locals.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');fHtmlCal+=`<span class="ftag local"><i class="ti ti-map-pin" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}</span>`;});
+  document.getElementById('festivos-lista').innerHTML=fHtmlCal;
+
+  // Lista completa en ajustos (con botones de eliminar)
+  renderFestivosAjustos(y);
 
   // Detail
   const panel=document.getElementById('cal-detail');
@@ -1144,52 +1188,57 @@ function renderCalendario(){
 function selectCalDay(d){selectedDate=selectedDate===d?null:d;renderCalendario();}
 
 function renderAnual(){
-  const y=anualYear;document.getElementById('anual-title').textContent='Resum '+y;
+  const y=anualYear;
+  document.getElementById('anual-title').textContent='Resum '+y;
   const yE=yEntries(y);
   if(!yE.length){
     document.getElementById('kpi-anual').innerHTML='';
     document.getElementById('anual-chart').innerHTML='<div class="empty-state"><i class="ti ti-calendar-off"></i><p>Sense dades per a '+y+'</p></div>';
-    document.getElementById('anual-tabla').innerHTML='';return;
+    return;
   }
-  const md=MONTHS_S.map((name,m)=>{const p=posH(m,y),n=negH(m,y),net=p+n;const pago=state.pagos.find(pg=>{const[py,pm]=pg.mes.split('-').map(Number);return py===y&&pm-1===m;});return{name,pos:p,neg:n,net,pagadas:pago?pago.pagadas:null,precioReal:pago?pago.precioReal:0,precioEst:pago?pago.precioEst:0};});
-  const tP=md.reduce((s,d)=>s+d.pos,0),tN=md.reduce((s,d)=>s+d.neg,0),tNet=tP+tN;
-  const tCob=md.reduce((s,d)=>s+(d.pagadas&&d.precioReal?d.pagadas*d.precioReal:0),0);
-  const tEst=md.reduce((s,d)=>s+(d.net>0&&d.precioEst?d.net*d.precioEst:0),0);
-  const tPag=md.reduce((s,d)=>s+(d.pagadas||0),0),dif=tNet-tPag;
+  const tNet=yE.reduce((s,e)=>s+e.horas,0);
+  const tPag=state.pagos.filter(p=>p.mes.startsWith(String(y))).reduce((s,p)=>s+(p.pagadas||0),0);
+  const nc=tNet>0?'green':tNet<0?'red':'';
   document.getElementById('kpi-anual').innerHTML=`
-    <div class="kpi"><div class="kpi-label">TOTAL EXTRA</div><div class="kpi-value green small">+${fmtH(tP)}</div></div>
-    <div class="kpi"><div class="kpi-label">ANTICIPADES</div><div class="kpi-value red small">${fmtH(tN)}</div></div>
-    <div class="kpi"><div class="kpi-label">NET ANUAL</div><div class="kpi-value ${tNet>0?'green':tNet<0?'red':''} small">${fmtH(tNet)}</div></div>
-    <div class="kpi"><div class="kpi-label">DIF. PAGAMENT</div><div class="kpi-value ${dif>=0?'green':'red'} small">${dif>=0?'+':''}${fmtH(dif)}</div></div>
-    <div class="kpi"><div class="kpi-label">TOTAL COBRAT</div><div class="kpi-value small">${fmtEur(tCob)}</div></div>
-    <div class="kpi"><div class="kpi-label">TOTAL ESTIMAT</div><div class="kpi-value small">${fmtEur(tEst)}</div></div>`;
-  const mxA=Math.max(...md.map(d=>Math.max(Math.abs(d.pos),Math.abs(d.neg))),0.01);
+    <div class="kpi"><div class="kpi-label">EXTRAS</div><div class="kpi-value ${nc} small">${tNet>0?'+':''}${fmtH(tNet)}</div></div>
+    <div class="kpi"><div class="kpi-label">HORES PAGADES</div><div class="kpi-value small">${tPag>0?fmtH(tPag):'—'}</div></div>`;
+
+  // Gràfic de barres per mes
+  const md=MONTHS_S.map((name,m)=>{const net=netH(m,y);return{name,net};});
+  const mxA=Math.max(...md.map(d=>Math.abs(d.net)),0.01);
   let ch='';
-  md.forEach(d=>{const pw=d.pos>0?(d.pos/mxA*46).toFixed(1):0,nw=d.neg<0?(Math.abs(d.neg)/mxA*46).toFixed(1):0;const noD=d.pos===0&&d.neg===0;const vc=d.net>0?'green':d.net<0?'red':'dim';
-    ch+=`<div class="chart-row"><span class="chart-lbl">${d.name}</span><div class="chart-bar-bg"><div class="chart-mid-line"></div>${d.pos>0?`<div class="bar-pos" style="width:${pw}%"></div>`:''}${d.neg<0?`<div class="bar-neg" style="width:${nw}%"></div>`:''}</div><span class="chart-val ${noD?'dim':vc}">${noD?'—':((d.net>0?'+':'')+fmtH(d.net))}</span></div>`;});
+  md.forEach(d=>{
+    const pw=d.net>0?(d.net/mxA*100).toFixed(1):0;
+    const nw=d.net<0?(Math.abs(d.net)/mxA*100).toFixed(1):0;
+    const noD=d.net===0;
+    const vc=d.net>0?'green':d.net<0?'red':'dim';
+    ch+=`<div class="chart-row">
+      <span class="chart-lbl">${d.name}</span>
+      <div class="chart-bar-bg">
+        <div class="chart-mid-line"></div>
+        ${d.net>0?`<div class="bar-pos" style="width:${pw}%"></div>`:''}
+        ${d.net<0?`<div class="bar-neg" style="width:${nw}%"></div>`:''}
+      </div>
+      <span class="chart-val ${noD?'dim':vc}">${noD?'—':((d.net>0?'+':'')+fmtH(d.net))}</span>
+    </div>`;
+  });
   document.getElementById('anual-chart').innerHTML=ch;
-  let th='<div class="divider"></div>';
-  md.forEach((d,i)=>{if(d.pos===0&&d.neg===0)return;const pago=state.pagos.find(p=>{const[py,pm]=p.mes.split('-').map(Number);return py===y&&pm-1===i;});const dH=pago?d.net-pago.pagadas:null,cob=pago?pago.pagadas*pago.precioReal:null;
-    th+=`<div class="sum-row"><span class="sum-lbl">${MONTHS[i].slice(0,3)}</span><span style="display:flex;gap:8px;align-items:center;">${d.pos>0?`<span class="sum-val green" style="font-size:12px;">+${fmtH(d.pos)}</span>`:''}${d.neg<0?`<span class="sum-val red" style="font-size:12px;">${fmtH(d.neg)}</span>`:''}<span class="sum-val ${d.net>0?'green':d.net<0?'red':''}">${d.net>0?'+':''}${fmtH(d.net)}</span>${dH!==null?`<span class="pill ${dH>=0?'green':'red'}">${dH>=0?'+':''}${fmtH(dH)}</span>`:''}</span></div>`;});
-  th+=`<div class="sum-row total"><span class="sum-lbl">Total ${y}</span><span style="display:flex;gap:8px;align-items:center;"><span class="sum-val ${tNet>0?'green':tNet<0?'red':''}">${tNet>0?'+':''}${fmtH(tNet)}</span><span class="pill ${dif>=0?'green':'red'}">${dif>=0?'+':''}${fmtH(dif)}</span></span></div>`;
-  document.getElementById('anual-tabla').innerHTML=th;
 }
 
 function renderPago(){
   if(!state.pagos.length){document.getElementById('pago-lista').innerHTML='<div class="empty-state"><i class="ti ti-coin-off"></i><p>Sense dades de pagament</p></div>';return;}
   document.getElementById('pago-lista').innerHTML=state.pagos.map(p=>{
     const[y,m]=p.mes.split('-').map(Number),label=MONTHS[m-1]+' '+y;
-    const diff=p.netAcum-p.pagadas,dE=(p.pagadas*p.precioReal)-(p.netAcum*p.precioEst);
+    const imp=p.import||0;
+    const preuHora=p.pagadas>0?imp/p.pagadas:0;
+    const diff=p.netAcum-p.pagadas;
     return`<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
       <div style="font-size:14px;font-weight:700;margin-bottom:10px;">${label}</div>
-      <div class="sum-row"><span class="sum-lbl">Hores netes</span><span class="sum-val">${fmtH(p.netAcum)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Hores netes treballades</span><span class="sum-val">${fmtH(p.netAcum)}</span></div>
       <div class="sum-row"><span class="sum-lbl">Hores pagades</span><span class="sum-val">${fmtH(p.pagadas)}</span></div>
       <div class="sum-row"><span class="sum-lbl">Diferència hores</span><span class="sum-val ${diff>=0?'green':'red'}">${diff>=0?'+':''}${fmtH(diff)}</span></div>
-      <div class="sum-row"><span class="sum-lbl">Preu real</span><span class="sum-val">${fmtEur(p.precioReal)}/h</span></div>
-      <div class="sum-row"><span class="sum-lbl">Preu estimat</span><span class="sum-val">${fmtEur(p.precioEst)}/h</span></div>
-      <div class="sum-row"><span class="sum-lbl">Total cobrat</span><span class="sum-val">${fmtEur(p.pagadas*p.precioReal)}</span></div>
-      <div class="sum-row"><span class="sum-lbl">Total estimat</span><span class="sum-val">${fmtEur(p.netAcum*p.precioEst)}</span></div>
-      <div class="sum-row total"><span class="sum-lbl">Diferència econ.</span><span class="sum-val ${dE>=0?'green':'red'}">${dE>=0?'+':''}${fmtEur(dE)}</span></div>
+      <div class="sum-row"><span class="sum-lbl">Import cobrat</span><span class="sum-val">${fmtEur(imp)}</span></div>
+      <div class="sum-row total"><span class="sum-lbl">Preu/hora resultant</span><span class="sum-val" style="color:var(--accent);">${fmtEur(preuHora)}/h</span></div>
     </div>`;
   }).join('');
 }
@@ -1245,9 +1294,34 @@ function saveUserName(){
   showBackupStatus('success','✓ Nom actualitzat correctament.');
 }
 
+function renderFestivosAjustos(y){
+  const el=document.getElementById('festivos-lista-ajustos');
+  if(!el)return;
+  const apiList=state.festivosAPI[String(y)]||[];
+  const locals=state.festivosLocales.filter(f=>f.fecha.startsWith(String(y)));
+  let html='';
+  if(apiList.length===0&&locals.length===0){
+    html='<div class="text-sm" style="margin-top:4px;">Sense festius registrats per a '+y+'.</div>';
+  } else {
+    if(apiList.length>0){
+      html+='<div class="text-sm" style="margin-bottom:4px;">Festius CV ('+apiList.length+')</div>';
+      apiList.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');html+=`<span class="ftag api"><i class="ti ti-flag" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}<button onclick="deleteFestivoAPI('${f.fecha}','${y}');renderFestivosAjustos(${y});renderCalendario()">×</button></span>`;});
+    }
+    if(locals.length>0){
+      html+='<div class="text-sm" style="margin-top:8px;margin-bottom:4px;">Festius locals</div>';
+      locals.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');html+=`<span class="ftag local"><i class="ti ti-map-pin" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}<button onclick="deleteFestivoLocal('${f.fecha}');renderFestivosAjustos(${y});renderCalendario()">×</button></span>`;});
+    }
+  }
+  el.innerHTML=html;
+}
+
 function renderAjustos(){
   document.getElementById('ajustos-name').textContent=userName;
   document.getElementById('ajustos-avatar').textContent=userName.slice(0,2).toUpperCase();
+  // Actualizar festivos-year en Ajustos (usa el año del calendario)
+  const festYearEl=document.getElementById('festivos-year');
+  if(festYearEl)festYearEl.textContent=calYear;
+  renderFestivosAjustos(calYear);
 }
 
 function showBackupStatus(type, msg){
