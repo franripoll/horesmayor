@@ -15,6 +15,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+// Fallback: si XLSX no cargó, intentar unpkg
+window.addEventListener('load', function() {
+  if(typeof XLSX === 'undefined') {
+    var s = document.createElement('script');
+    s.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+    document.head.appendChild(s);
+  }
+});
+</script>
 <title>HoresMayor</title>
 <style>
 :root {
@@ -473,21 +483,6 @@ body {
       </div>
       <div class="entry-list" id="entry-list"></div>
     </div>
-
-    <!-- IMPORTAR EXCEL -->
-    <div class="card">
-      <div class="card-title">Importar des de Excel</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.5;">
-        Importa les teues hores del formulari de Google. Columnes: <span class="text-mono" style="color:var(--accent);font-size:12px;">Data &middot; Minuts &middot; Hores &middot; Menys</span>
-      </div>
-      <label class="import-drop" for="import-file">
-        <i class="ti ti-file-spreadsheet" style="font-size:28px;color:var(--text3);display:block;margin-bottom:6px;"></i>
-        <span style="font-size:13px;color:var(--text2);">Selecciona el fitxer .xlsx</span>
-        <span style="font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono);">Les dades existents no s'esborraran</span>
-        <input type="file" id="import-file" accept=".xlsx" style="display:none" onchange="importExcel(this)">
-      </label>
-      <div id="import-status" style="display:none;margin-top:10px;font-size:13px;font-family:var(--mono);padding:10px;border-radius:var(--radius-sm);"></div>
-    </div>
   </div>
 
   <!-- RESUMEN -->
@@ -655,6 +650,67 @@ body {
   </div>
 
   <!-- NAV -->
+  <!-- AJUSTOS -->
+  <div id="tab-ajustos" class="section">
+
+    <!-- Usuari -->
+    <div class="card">
+      <div class="card-title">Usuari</div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <div class="user-avatar" id="ajustos-avatar" style="width:48px;height:48px;font-size:18px;"></div>
+        <div>
+          <div style="font-size:16px;font-weight:700;" id="ajustos-name"></div>
+          <div style="font-size:12px;color:var(--text3);font-family:var(--mono);">Ceràmica Mayor</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Canviar nom</label>
+        <input class="form-input" type="text" id="aj-name" placeholder="El teu nom...">
+      </div>
+      <button class="btn btn-primary mt8" onclick="saveUserName()">
+        <i class="ti ti-check"></i> Guardar nom
+      </button>
+    </div>
+
+    <!-- Còpia de seguretat -->
+    <div class="card">
+      <div class="card-title">Còpia de seguretat</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;">
+        Exporta les teues dades per guardar-les o traslladar-les a un altre mòbil. El fitxer es pot restaurar des d'aquesta mateixa pantalla.
+      </div>
+      <button class="btn btn-primary" onclick="exportBackup()">
+        <i class="ti ti-download"></i> Exportar còpia de seguretat
+      </button>
+      <div style="height:10px;"></div>
+      <label class="import-drop" for="restore-file">
+        <i class="ti ti-upload" style="font-size:24px;color:var(--text3);display:block;margin-bottom:6px;"></i>
+        <span style="font-size:13px;color:var(--text2);">Restaurar còpia de seguretat</span>
+        <span style="font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono);">Selecciona un fitxer .json de backup</span>
+        <input type="file" id="restore-file" accept=".json" style="display:none" onchange="restoreBackup(this)">
+      </label>
+      <div id="backup-status" style="display:none;margin-top:10px;font-size:13px;font-family:var(--mono);padding:10px;border-radius:var(--radius-sm);"></div>
+    </div>
+
+    <!-- Importar Excel -->
+    <div class="card">
+      <div class="card-title">Importar des de Excel</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6;">
+        Migració inicial des del formulari de Google. Columnes: <span class="text-mono" style="color:var(--accent);font-size:12px;">Data · Minuts · Hores · Menys</span>. Les dades existents no s'esborraran.
+      </div>
+      <label class="import-drop" for="import-file">
+        <i class="ti ti-file-spreadsheet" style="font-size:28px;color:var(--text3);display:block;margin-bottom:6px;"></i>
+        <span style="font-size:13px;color:var(--text2);">Selecciona el fitxer .xlsx</span>
+        <input type="file" id="import-file" accept=".xlsx" style="display:none" onchange="importExcel(this)">
+      </label>
+      <div id="import-status" style="display:none;margin-top:10px;font-size:13px;font-family:var(--mono);padding:10px;border-radius:var(--radius-sm);"></div>
+    </div>
+
+    <!-- Info app -->
+    <div style="text-align:center;padding:16px 0 8px;font-size:12px;color:var(--text3);font-family:var(--mono);">
+      HoresMayor · Ceràmica Mayor<br>Les dades es guarden al teu mòbil
+    </div>
+  </div>
+
   <nav class="app-nav">
     <button class="nav-item active" onclick="showTab('registro',event)">
       <i class="ti ti-clock"></i>Registre
@@ -673,6 +729,9 @@ body {
     </button>
     <button class="nav-item" onclick="showTab('vacaciones',event)">
       <i class="ti ti-beach"></i>Vacances
+    </button>
+    <button class="nav-item" onclick="showTab('ajustos',event)">
+      <i class="ti ti-settings"></i>Ajustos
     </button>
   </nav>
 </div>
@@ -801,7 +860,7 @@ function showTabById(tab){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  const order=['registro','resumen','calendario','anual','pago','vacaciones'];
+  const order=['registro','resumen','calendario','anual','pago','vacaciones','ajustos'];
   const i=order.indexOf(tab);
   if(i>=0)document.querySelectorAll('.nav-item')[i].classList.add('active');
 }
@@ -936,7 +995,7 @@ function savePago(){
   saveAll();render();
 }
 
-function render(){renderRegistro();renderResumen();renderCalendario();renderAnual();renderPago();renderVacaciones();}
+function render(){renderRegistro();renderResumen();renderCalendario();renderAnual();renderPago();renderVacaciones();renderAjustos();}
 
 function renderRegistro(){
   const m=viewMonth,y=viewYear;
@@ -1172,6 +1231,91 @@ function renderVacaciones(){
   }).join('');
 }
 
+// AJUSTOS
+function saveUserName(){
+  const name=document.getElementById('aj-name').value.trim();
+  if(!name)return alert('Introdueix un nom vàlid.');
+  userName=name;
+  saveAll();
+  document.getElementById('header-name').textContent=userName;
+  document.getElementById('user-avatar').textContent=userName.slice(0,2).toUpperCase();
+  document.getElementById('ajustos-avatar').textContent=userName.slice(0,2).toUpperCase();
+  document.getElementById('ajustos-name').textContent=userName;
+  document.getElementById('aj-name').value='';
+  showBackupStatus('success','✓ Nom actualitzat correctament.');
+}
+
+function renderAjustos(){
+  document.getElementById('ajustos-name').textContent=userName;
+  document.getElementById('ajustos-avatar').textContent=userName.slice(0,2).toUpperCase();
+}
+
+function showBackupStatus(type, msg){
+  const el=document.getElementById('backup-status');
+  el.style.display='block';
+  if(type==='success'){el.style.background='var(--green-bg)';el.style.color='var(--green)';}
+  else if(type==='error'){el.style.background='var(--red-bg)';el.style.color='var(--red)';}
+  else{el.style.background='var(--amber-bg)';el.style.color='var(--amber)';}
+  el.textContent=msg;
+  setTimeout(()=>{el.style.display='none';},5000);
+}
+
+function exportBackup(){
+  try{
+    const backup={
+      version:1,
+      exportedAt:new Date().toISOString(),
+      userName,
+      state
+    };
+    const json=JSON.stringify(backup,null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const date=new Date().toISOString().slice(0,10);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='horesmayor-backup-'+date+'.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showBackupStatus('success','✓ Còpia exportada correctament. Guarda-la en un lloc segur.');
+  }catch(err){
+    showBackupStatus('error','Error exportant: '+err.message);
+  }
+}
+
+function restoreBackup(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const backup=JSON.parse(e.target.result);
+      if(!backup.state||!backup.version){
+        showBackupStatus('error','Fitxer no vàlid. Ha de ser una còpia exportada des de HoresMayor.');
+        input.value=''; return;
+      }
+      if(!confirm('Això sobreescriurà totes les dades actuals amb les de la còpia del '+backup.exportedAt.slice(0,10)+'. Continuar?')){
+        input.value=''; return;
+      }
+      state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[],...backup.state};
+      if(backup.userName){
+        userName=backup.userName;
+        document.getElementById('header-name').textContent=userName;
+        document.getElementById('user-avatar').textContent=userName.slice(0,2).toUpperCase();
+      }
+      saveAll();render();renderAjustos();
+      showBackupStatus('success','✓ Dades restaurades correctament. '+state.entries.length+' entrades carregades.');
+      input.value='';
+    }catch(err){
+      showBackupStatus('error','Error llegint el fitxer de còpia: '+err.message);
+      input.value='';
+    }
+  };
+  reader.readAsText(file);
+}
+
 // IMPORTAR EXCEL
 function importExcel(input){
   const file=input.files[0];
@@ -1182,78 +1326,95 @@ function importExcel(input){
   status.style.color='var(--text2)';
   status.textContent='Llegint el fitxer...';
 
+  // Verificar que XLSX está disponible
+  if(typeof XLSX === 'undefined'){
+    status.style.background='var(--red-bg)';
+    status.style.color='var(--red)';
+    status.textContent='Error: la llibreria de lectura no ha carregat. Tanca i torna a obrir l\'app amb connexió a internet.';
+    input.value='';
+    return;
+  }
+
   const reader=new FileReader();
+  reader.onerror=function(){
+    status.style.background='var(--red-bg)';
+    status.style.color='var(--red)';
+    status.textContent='Error llegint el fitxer. Prova de nou.';
+    input.value='';
+  };
   reader.onload=function(e){
     try{
       const data=new Uint8Array(e.target.result);
-      const wb=XLSX.read(data,{type:'uint8',cellDates:true});
+      const wb=XLSX.read(data,{type:'array',cellDates:true,dateNF:'yyyy-mm-dd'});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'yyyy-mm-dd'});
 
-      let added=0,skipped=0,errors=0;
+      let added=0,skipped=0;
       const existingDates=new Set(state.entries.map(e=>e.fecha));
 
-      // Saltar cabecera
       for(let i=1;i<rows.length;i++){
         const row=rows[i];
-        if(!row||!row[0])continue;
+        if(!row||row.length===0)continue;
         try{
-          // Col 0: fecha (puede venir como string 'yyyy-mm-dd' o como Date)
+          // Col 0: fecha
           let fecha='';
           const raw=row[0];
+          if(!raw)continue;
           if(typeof raw==='string'&&raw.match(/^\d{4}-\d{2}-\d{2}/)){
             fecha=raw.slice(0,10);
           } else if(raw instanceof Date){
-            fecha=raw.toISOString().slice(0,10);
+            // Ajustar timezone local
+            const d=new Date(raw.getTime()-raw.getTimezoneOffset()*60000);
+            fecha=d.toISOString().slice(0,10);
+          } else if(typeof raw==='string'&&raw.includes('/')){
+            // Formato dd/mm/yyyy
+            const parts=raw.split('/');
+            if(parts.length===3) fecha=parts[2].slice(0,4)+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
           } else {
             // Número serial Excel
-            const num=parseFloat(raw);
-            if(!isNaN(num)){
+            const num=parseFloat(String(raw).replace(',','.'));
+            if(!isNaN(num)&&num>40000){
               const d=new Date(Math.round((num-25569)*86400*1000));
               fecha=d.toISOString().slice(0,10);
             }
           }
-          if(!fecha||fecha==='Invalid')continue;
+          if(!fecha||fecha.includes('NaN'))continue;
 
           // Col 1: minuts, Col 2: hores, Col 3: menys
-          const minuts=parseFloat(row[1])||0;
-          const hores=parseFloat(row[2])||0;
-          const menys=parseFloat(row[3])||0;
+          const minuts=parseFloat(String(row[1]||'0').replace(',','.'))||0;
+          const hores=parseFloat(String(row[2]||'0').replace(',','.'))||0;
+          const menys=parseFloat(String(row[3]||'0').replace(',','.'))||0;
 
-          // Calcular neto: (hores + minuts) - menys
           const net=Math.round((hores+minuts-menys)*4)/4;
           if(net===0){skipped++;continue;}
 
-          // No duplicar fechas que ya existen
           if(existingDates.has(fecha)){skipped++;continue;}
 
           const desc=net>0?'Importat del formulari':'Eixida anticipada (importat)';
-          state.entries.push({id:Date.now()+i,fecha,horas:net,desc});
+          state.entries.push({id:Date.now()+i+Math.random(),fecha,horas:net,desc});
           existingDates.add(fecha);
           added++;
-        }catch(err){errors++;}
+        }catch(rowErr){skipped++;}
       }
 
       state.entries.sort((a,b)=>b.fecha.localeCompare(a.fecha));
       saveAll();render();
 
-      // Feedback
       if(added>0){
         status.style.background='var(--green-bg)';
         status.style.color='var(--green)';
-        status.textContent=`✓ ${added} entrades importades${skipped>0?' · '+skipped+' ignorades (ja existien o netes 0)':''}`;
+        status.textContent='✓ '+added+' entrades importades'+(skipped>0?' · '+skipped+' ignorades':'');
       } else {
         status.style.background='var(--amber-bg)';
         status.style.color='var(--amber)';
-        status.textContent=`Cap entrada nova. ${skipped} ja existien o eren zero.`;
+        status.textContent='Cap entrada nova importada. '+skipped+' files ignorades (ja existien o netes a zero).';
       }
-      // Reset input
       input.value='';
-      setTimeout(()=>{status.style.display='none';},5000);
+      setTimeout(()=>{status.style.display='none';},6000);
     }catch(err){
       status.style.background='var(--red-bg)';
       status.style.color='var(--red)';
-      status.textContent='Error llegint el fitxer. Comprova que és un .xlsx vàlid.';
+      status.textContent='Error processant el fitxer: '+err.message;
       input.value='';
     }
   };
