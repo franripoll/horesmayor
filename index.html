@@ -440,7 +440,8 @@ body {
       </div>
       <div class="form-group">
         <label class="form-label">Data</label>
-        <input class="form-input" type="date" id="r-fecha">
+        <input class="form-input" type="date" id="r-fecha" onchange="updateDayLabel()">
+        <div id="r-day-label" style="font-size:12px;color:var(--text3);margin-top:4px;padding-left:2px;"></div>
       </div>
       <div class="form-group">
         <label class="form-label">Hores</label>
@@ -763,6 +764,22 @@ body {
 const MONTHS=['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
 const MONTHS_S=['Gen','Feb','Mar','Abr','Mai','Jun','Jul','Ago','Set','Oct','Nov','Des'];
 const DAYS=['Dl','Dt','Dc','Dj','Dv','Ds','Dg'];
+const DAYS_FULL=['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres','Dissabte'];
+
+function updateDayLabel(){
+  const val=document.getElementById('r-fecha').value;
+  const el=document.getElementById('r-day-label');
+  if(!val||!el){return;}
+  const d=new Date(val+'T00:00:00');
+  const dow=DAYS_FULL[d.getDay()];
+  const isWE=d.getDay()===0||d.getDay()===6;
+  const fest=getFestivoAPI(val)||getFestivoLocal(val);
+  let label=dow;
+  if(fest)label+=` · ${fest.nombre} 🎉`;
+  else if(isWE)label+=' · Cap de setmana';
+  el.textContent=label;
+  el.style.color=(isWE||fest)?'var(--red)':'var(--text3)';
+}
 
 let userName='';
 let state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[]};
@@ -809,6 +826,7 @@ function initApp(){
   document.getElementById('vc-anio').value=new Date().getFullYear();
   initChips();
   render();
+  updateDayLabel();
 }
 
 function today(){return new Date().toISOString().slice(0,10);}
@@ -950,6 +968,7 @@ function cancelEdit(){editingId=null;resetForm();render();}
 function resetForm(){
   editingId=null;
   document.getElementById('r-fecha').value=today();
+  updateDayLabel();
   initChips();
   document.getElementById('r-desc').value='';setTipo('pos');
   document.getElementById('form-card-title').textContent='Nova entrada';
