@@ -440,8 +440,13 @@ body {
       </div>
       <div class="form-group">
         <label class="form-label">Data</label>
-        <input class="form-input" type="date" id="r-fecha" onchange="updateDayLabel()">
-        <div id="r-day-label" style="font-size:12px;color:var(--text3);margin-top:4px;padding-left:2px;"></div>
+        <div style="position:relative;">
+          <input class="form-input" type="date" id="r-fecha" onchange="updateDayLabel()"
+            style="position:absolute;inset:0;opacity:0;z-index:2;cursor:pointer;">
+          <div class="form-input" id="r-fecha-display" style="display:flex;align-items:center;gap:0;pointer-events:none;color:var(--text);">
+            <span id="r-day-label" style="color:var(--text);font-weight:600;"></span><span id="r-date-label" style="color:var(--text2);"></span>
+          </div>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Hores</label>
@@ -768,17 +773,21 @@ const DAYS_FULL=['Diumenge','Dilluns','Dimarts','Dimecres','Dijous','Divendres',
 
 function updateDayLabel(){
   const val=document.getElementById('r-fecha').value;
-  const el=document.getElementById('r-day-label');
-  if(!val||!el){return;}
+  const dayEl=document.getElementById('r-day-label');
+  const dateEl=document.getElementById('r-date-label');
+  if(!val||!dayEl){return;}
   const d=new Date(val+'T00:00:00');
   const dow=DAYS_FULL[d.getDay()];
   const isWE=d.getDay()===0||d.getDay()===6;
   const fest=getFestivoAPI(val)||getFestivoLocal(val);
-  let label=dow;
-  if(fest)label+=` · ${fest.nombre} 🎉`;
-  else if(isWE)label+=' · Cap de setmana';
-  el.textContent=label;
-  el.style.color=(isWE||fest)?'var(--red)':'var(--text3)';
+  const months=['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'];
+  const dateStr=', '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+  dayEl.textContent=dow;
+  dateEl.textContent=dateStr;
+  const color=(isWE||fest)?'var(--red)':'var(--text)';
+  dayEl.style.color=color;
+  dateEl.style.color=(isWE||fest)?'var(--red)':'var(--text2)';
+  if(fest){dateEl.textContent+=` · ${fest.nombre}`;}
 }
 
 let userName='';
@@ -989,7 +998,12 @@ function submitForm(){
   state.entries.sort((a,b)=>b.fecha.localeCompare(a.fecha));
   resetForm();saveAll();render();
 }
-function deleteEntry(id){if(editingId===id)cancelEdit();state.entries=state.entries.filter(e=>e.id!==id);saveAll();render();}
+function deleteEntry(id){
+  if(!confirm('Eliminar aquest registre?'))return;
+  if(editingId===id)cancelEdit();
+  state.entries=state.entries.filter(e=>e.id!==id);
+  saveAll();render();
+}
 
 async function loadFestivosAPI(){
   const y=calYear;
@@ -1110,7 +1124,11 @@ function confirmVacSel(){
 
 function addVac(){} // legacy, ja no s'usa
 
-function deleteVac(id){state.vacaciones=state.vacaciones.filter(v=>v.id!==id);saveAll();render();}
+function deleteVac(id){
+  if(!confirm('Eliminar aquest període de vacances?'))return;
+  state.vacaciones=state.vacaciones.filter(v=>v.id!==id);
+  saveAll();render();
+}
 
 function renderVacCal(){
   document.getElementById('vac-cal-title').textContent=MONTHS[vacCalMonth]+' '+vacCalYear;
@@ -1212,10 +1230,33 @@ function renderResumen(){
   const pag=pago?pago.pagadas:null;
   const nc=net>0?'green':net<0?'red':'';
 
-  // 2 KPIs: neto i pagades
+  // Calcular total acumulat i media €/hora
+  const totalAcum=netAll();
+  const pagosAmbImport=state.pagos.filter(p=>p.pagadas>0&&p.import>0);
+  const mediaPreuHora=pagosAmbImport.length>0
+    ? pagosAmbImport.reduce((s,p)=>s+(p.import/p.pagadas),0)/pagosAmbImport.length
+    : null;
+  const eurosAcum=mediaPreuHora!==null?totalAcum*mediaPreuHora:null;
+  const ac=totalAcum>0?'green':totalAcum<0?'red':'';
+
+  // KPIs del mes + total acumulat destacat
   document.getElementById('kpi-resumen').innerHTML=`
-    <div class="kpi"><div class="kpi-label">EXTRAS</div><div class="kpi-value ${nc} small">${net>0?'+':''}${fmtH(net)}</div></div>
+    <div class="kpi"><div class="kpi-label">EXTRAS MES</div><div class="kpi-value ${nc} small">${net>0?'+':''}${fmtH(net)}</div></div>
     <div class="kpi"><div class="kpi-label">HORES PAGADES</div><div class="kpi-value small">${pag!==null?fmtH(pag):'—'}</div></div>`;
+
+  // Banner total acumulat
+  const bannerColor=totalAcum>0?'var(--green-bg)':'var(--red-bg)';
+  const bannerBorder=totalAcum>0?'var(--green-border)':'var(--red-border)';
+  const bannerText=totalAcum>0?'var(--green)':'var(--red)';
+  const eurosHtml=eurosAcum!==null
+    ?`<div style="font-size:13px;color:${bannerText};opacity:0.8;margin-top:2px;">≈ ${fmtEur(eurosAcum)} · ${fmtEur(mediaPreuHora)}/h de mitjana</div>`
+    :`<div style="font-size:12px;color:var(--text3);margin-top:2px;">Afegeix dades de pagament per veure l'import</div>`;
+
+  const bannerHtml=`<div style="background:${bannerColor};border:1px solid ${bannerBorder};border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:${bannerText};opacity:0.7;margin-bottom:4px;">EM DEUEN</div>
+    <div style="font-size:32px;font-weight:800;color:${bannerText};letter-spacing:-1px;">${totalAcum>0?'+':''}${fmtH(totalAcum)}</div>
+    ${eurosHtml}
+  </div>`;
 
   const entries=mEntries(m,y);
 
@@ -1231,7 +1272,7 @@ function renderResumen(){
   const weeks=Object.entries(bw).sort((a,b)=>a[0].localeCompare(b[0]));
   const maxW=Math.max(...weeks.map(([,v])=>Math.abs(v)),0.01);
 
-  let chartHtml='';
+  let chartHtml=bannerHtml;
   if(weeks.length>0){
     weeks.forEach(([wk,wNet])=>{
       const d=new Date(wk+'T00:00:00');
@@ -1248,11 +1289,11 @@ function renderResumen(){
         </div>`;
     });
   } else {
-    chartHtml='<div class="empty-state" style="padding:16px 0;"><i class="ti ti-chart-bar-off"></i><p>Sense dades aquest mes</p></div>';
+    chartHtml+=`<div class="empty-state" style="padding:16px 0;"><i class="ti ti-chart-bar-off"></i><p>Sense dades aquest mes</p></div>`;
   }
   document.getElementById('resum-chart').innerHTML=chartHtml;
 
-  // Part econòmica
+  // Part econòmica del mes
   let html='';
   if(pago){
     const preuHora=pago.pagadas>0?(pago.import/pago.pagadas):0;
@@ -1260,7 +1301,7 @@ function renderResumen(){
       <div class="sum-row"><span class="sum-lbl">Hores netes treballades</span><span class="sum-val">${fmtH(net)}</span></div>
       <div class="sum-row"><span class="sum-lbl">Hores pagades</span><span class="sum-val">${fmtH(pag)}</span></div>
       <div class="sum-row"><span class="sum-lbl">Import cobrat</span><span class="sum-val">${fmtEur(pago.import)}</span></div>
-      <div class="sum-row total"><span class="sum-lbl">Preu/hora resultant</span><span class="sum-val accent" style="color:var(--accent);">${fmtEur(preuHora)}/h</span></div>`;
+      <div class="sum-row total"><span class="sum-lbl">Preu/hora resultant</span><span class="sum-val" style="color:var(--accent);">${fmtEur(preuHora)}/h</span></div>`;
   }
   document.getElementById('resumen-detail').innerHTML=html;
 }
