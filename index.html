@@ -492,18 +492,7 @@ body {
 
   <!-- RESUMEN -->
   <div id="tab-resumen" class="section">
-    <div class="kpi-grid" id="kpi-resumen"></div>
-    <div class="card">
-      <div class="sec-header">
-        <span class="sec-title" id="res-month-label"></span>
-        <div class="nav-arrows">
-          <button class="arrow-btn" onclick="changeMonth(-1);render()"><i class="ti ti-chevron-left"></i></button>
-          <button class="arrow-btn" onclick="changeMonth(1);render()"><i class="ti ti-chevron-right"></i></button>
-        </div>
-      </div>
-      <div id="resum-chart" style="margin-bottom:16px;"></div>
-      <div id="resumen-detail"></div>
-    </div>
+    <div id="resum-content"></div>
   </div>
 
   <!-- CALENDARIO -->
@@ -1266,85 +1255,130 @@ function renderRegistro(){
 }
 
 function renderResumen(){
-  const m=viewMonth,y=viewYear;
-  document.getElementById('res-month-label').textContent=MONTHS[m]+' '+y;
-  const net=netH(m,y);
-  const pago=state.pagos.find(p=>{const[py,pm]=p.mes.split('-').map(Number);return py===y&&pm-1===m;});
-  const pag=pago?pago.pagadas:null;
-  const nc=net>0?'green':net<0?'red':'';
+  const now=new Date();
+  const m=now.getMonth(), y=now.getFullYear();
+  const tod=today();
 
-  // Preu/hora: usar el mes més recent amb dades
-  const totalAcum=netAll();
+  // Preu actual (mes més recent amb dades)
   const pagosAmbImport=state.pagos.filter(p=>p.pagadas>0&&p.import>0).sort((a,b)=>b.mes.localeCompare(a.mes));
   const preuActual=pagosAmbImport.length>0?(pagosAmbImport[0].import/pagosAmbImport[0].pagadas):null;
-  const eurosAcum=preuActual!==null?totalAcum*preuActual:null;
-  const ac=totalAcum>0?'green':totalAcum<0?'red':'';
 
-  // KPIs del mes + total acumulat destacat
-  document.getElementById('kpi-resumen').innerHTML=`
-    <div class="kpi"><div class="kpi-label">EXTRAS MES</div><div class="kpi-value ${nc} small">${net>0?'+':''}${fmtH(net)}</div></div>
-    <div class="kpi"><div class="kpi-label">HORES PAGADES</div><div class="kpi-value small">${pag!==null?fmtH(pag):'—'}</div></div>`;
+  // ── AQUEST MES ──
+  const netMes=netH(m,y);
+  const ncMes=netMes>0?'var(--green)':netMes<0?'var(--red)':'var(--text)';
+  const estimacioMes=preuActual!==null?netMes*preuActual:null;
 
-  // Banner total acumulat
-  const bannerColor=totalAcum>0?'var(--green-bg)':'var(--red-bg)';
-  const bannerBorder=totalAcum>0?'var(--green-border)':'var(--red-border)';
-  const bannerText=totalAcum>0?'var(--green)':'var(--red)';
-  const eurosHtml=eurosAcum!==null
-    ?`<div style="font-size:13px;color:${bannerText};opacity:0.8;margin-top:2px;">≈ ${fmtEur(eurosAcum)} · ${fmtEur(preuActual)}/h (preu actual)</div>`
-    :`<div style="font-size:12px;color:var(--text3);margin-top:2px;">Afegeix dades de pagament per veure l'import</div>`;
+  // ── AQUEST ANY ──
+  const yEntrs=yEntries(y);
+  const netAny=yEntrs.reduce((s,e)=>s+e.horas,0);
+  const pagosAny=state.pagos.filter(p=>p.mes.startsWith(String(y)));
+  const tPagAny=pagosAny.reduce((s,p)=>s+(p.pagadas||0),0);
+  const tCobratAny=pagosAny.reduce((s,p)=>s+(p.import||0),0);
+  const pendentAny=netAny-tPagAny;
+  const eurosPendent=preuActual!==null?pendentAny*preuActual:null;
+  const diesPendent=pendentAny/8;
+  const ncAny=netAny>0?'var(--green)':netAny<0?'var(--red)':'var(--text)';
+  const pcAny=pendentAny>0?'var(--red)':pendentAny<0?'var(--green)':'var(--text3)';
 
-  const bannerHtml=`<div style="background:${bannerColor};border:1px solid ${bannerBorder};border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;">
-    <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:${bannerText};opacity:0.7;margin-bottom:4px;">EM DEUEN</div>
-    <div style="font-size:32px;font-weight:800;color:${bannerText};letter-spacing:-1px;">${totalAcum>0?'+':''}${fmtH(totalAcum)}</div>
-    ${eurosHtml}
-  </div>`;
+  // ── VACANCES ──
+  const cupoAny=state.vacCupos.find(c=>c.anio===y);
+  const {gaudides:vacGaud, assignades:vacAssig}=diesVacStats(y);
+  const vacDisp=cupoAny?(cupoAny.dies-vacGaud-vacAssig):null;
 
-  const entries=mEntries(m,y);
-
-  // Gràfic de barres per setmana
-  const bw={};
-  entries.forEach(e=>{
-    const d=new Date(e.fecha+'T00:00:00'),ws=new Date(d);
-    ws.setDate(d.getDate()-d.getDay()+1);
-    const k=ws.toISOString().slice(0,10);
-    if(!bw[k])bw[k]=0;
-    bw[k]+=e.horas;
-  });
-  const weeks=Object.entries(bw).sort((a,b)=>a[0].localeCompare(b[0]));
-  const maxW=Math.max(...weeks.map(([,v])=>Math.abs(v)),0.01);
-
-  let chartHtml=bannerHtml;
-  if(weeks.length>0){
-    weeks.forEach(([wk,wNet])=>{
-      const d=new Date(wk+'T00:00:00');
-      const label=d.getDate()+'/'+(d.getMonth()+1);
-      const barW=Math.round((Math.abs(wNet)/maxW)*100);
-      const cls=wNet>=0?'green':'red';
-      chartHtml+=`
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <span style="font-size:12px;color:var(--text3);min-width:32px;">${label}</span>
-          <div style="flex:1;height:20px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border);">
-            <div style="height:100%;width:${barW}%;background:var(--${cls});border-radius:4px;transition:width 0.3s;"></div>
-          </div>
-          <span style="font-size:12px;font-weight:700;color:var(--${cls});min-width:52px;text-align:right;">${wNet>0?'+':''}${fmtH(wNet)}</span>
-        </div>`;
-    });
-  } else {
-    chartHtml+=`<div class="empty-state" style="padding:16px 0;"><i class="ti ti-chart-bar-off"></i><p>Sense dades aquest mes</p></div>`;
+  // ── PROPER FESTIU ──
+  const totsF=[
+    ...(state.festivosAPI[String(y)]||[]),
+    ...(state.festivosAPI[String(y+1)]||[]),
+    ...state.festivosLocales
+  ].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const proxim=totsF.find(f=>f.fecha>=tod);
+  let proximHtml='<div style="font-size:13px;color:var(--text3);">Carrega els festius a Ajustos per veure el proper.</div>';
+  if(proxim){
+    const dp=new Date(proxim.fecha+'T00:00:00');
+    const diffD=Math.round((dp-new Date(tod+'T00:00:00'))/86400000);
+    const monthsFull=['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'];
+    const diesText=diffD===0?'<span style="color:var(--accent);font-weight:700;">Avui!</span>':diffD===1?'<span style="color:var(--green);font-weight:700;">Demà</span>':`<span style="color:var(--green);font-weight:700;">En ${diffD} dies</span>`;
+    proximHtml=`
+      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;">${proxim.nombre}</div>
+      <div style="font-size:13px;color:var(--text2);">${DAYS_FULL[dp.getDay()]} ${dp.getDate()} de ${monthsFull[dp.getMonth()]} de ${dp.getFullYear()}</div>
+      <div style="margin-top:6px;font-size:14px;">${diesText}</div>`;
   }
-  document.getElementById('resum-chart').innerHTML=chartHtml;
 
-  // Part econòmica del mes
-  let html='';
-  if(pago){
-    const preuHora=pago.pagadas>0?(pago.import/pago.pagadas):0;
-    html+=`<div class="divider"></div>
-      <div class="sum-row"><span class="sum-lbl">Hores netes treballades</span><span class="sum-val">${fmtH(net)}</span></div>
-      <div class="sum-row"><span class="sum-lbl">Hores pagades</span><span class="sum-val">${fmtH(pag)}</span></div>
-      <div class="sum-row"><span class="sum-lbl">Import cobrat</span><span class="sum-val">${fmtEur(pago.import)}</span></div>
-      <div class="sum-row total"><span class="sum-lbl">Preu/hora resultant</span><span class="sum-val" style="color:var(--accent);">${fmtEur(preuHora)}/h</span></div>`;
-  }
-  document.getElementById('resumen-detail').innerHTML=html;
+  // ── RENDER ──
+  const rowStyle='display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;';
+  const lastRowStyle='display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:14px;';
+  const lblStyle='color:var(--text2);';
+  const valStyle='font-weight:700;';
+
+  document.getElementById('resum-content').innerHTML=`
+
+    <!-- Aquest mes -->
+    <div class="card">
+      <div class="card-title">Aquest mes · ${MONTHS[m]} ${y}</div>
+      <div style="${rowStyle}">
+        <span style="${lblStyle}">Hores extra netes</span>
+        <span style="${valStyle};color:${ncMes};">${netMes!==0?(netMes>0?'+':'')+fmtH(netMes):'—'}</span>
+      </div>
+      <div style="${lastRowStyle}">
+        <span style="${lblStyle}">Estimació a cobrar</span>
+        <span style="${valStyle};color:var(--accent);">${estimacioMes!==null?(estimacioMes>0?'≈ ':'')+fmtEur(estimacioMes):'Afegeix pagaments'}</span>
+      </div>
+    </div>
+
+    <!-- Aquest any -->
+    <div class="card">
+      <div class="card-title">Aquest any · ${y}</div>
+      <div style="${rowStyle}">
+        <span style="${lblStyle}">Hores acumulades</span>
+        <span style="${valStyle};color:${ncAny};">${netAny!==0?(netAny>0?'+':'')+fmtH(netAny):'—'}</span>
+      </div>
+      <div style="${rowStyle}">
+        <span style="${lblStyle}">Total cobrat</span>
+        <span style="${valStyle};">${tCobratAny>0?fmtEur(tCobratAny):'—'}</span>
+      </div>
+      <div style="${lastRowStyle}">
+        <span style="${lblStyle}">Hores pendents</span>
+        <div style="text-align:right;">
+          <div style="${valStyle};color:${pcAny};">${pendentAny!==0?(pendentAny>0?'+':'')+fmtH(pendentAny):'—'}</div>
+          ${pendentAny!==0?`<div style="font-size:11px;color:var(--text3);margin-top:1px;">${diasPendent(pendentAny)}${eurosPendent!==null?' · ≈'+fmtEur(eurosPendent):''}</div>`:''}
+        </div>
+      </div>
+    </div>
+
+    <!-- Vacances -->
+    <div class="card">
+      <div class="card-title">Vacances ${y}</div>
+      ${cupoAny?`
+      <div style="${rowStyle}">
+        <span style="${lblStyle}">Dies totals assignats</span>
+        <span style="${valStyle};">${cupoAny.dies}</span>
+      </div>
+      <div style="${rowStyle}">
+        <span style="${lblStyle}">Ja gaudits</span>
+        <span style="${valStyle};color:var(--text2);">${vacGaud}</span>
+      </div>
+      <div style="${rowStyle}">
+        <span style="${lblStyle}">Assignats (futurs)</span>
+        <span style="${valStyle};color:var(--blue);">${vacAssig}</span>
+      </div>
+      <div style="${lastRowStyle}">
+        <span style="${lblStyle}">Disponibles</span>
+        <span style="${valStyle};color:${vacDisp<=3?'var(--red)':'var(--green)'};">${vacDisp}</span>
+      </div>`
+      :'<div style="font-size:13px;color:var(--text3);">Configura el teu cupo a Vacances.</div>'}
+    </div>
+
+    <!-- Proper festiu -->
+    <div class="card">
+      <div class="card-title">Proper festiu</div>
+      ${proximHtml}
+    </div>
+  `;
+}
+
+function diasPendent(h){
+  const d=(h/8);
+  return (d>0?'+':'')+d.toFixed(1).replace('.',',')+' dies';
 }
 
 function renderCalendario(){
