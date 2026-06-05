@@ -597,23 +597,6 @@ body {
   <div id="tab-vacaciones" class="section">
     <div id="vac-contadores"></div>
     <div class="card">
-      <div class="card-title">Quota de dies per any</div>
-      <div class="form-row form-group">
-        <div>
-          <label class="form-label">Any</label>
-          <input class="form-input" type="number" id="vc-anio" min="2020" max="2040" placeholder="2026">
-        </div>
-        <div>
-          <label class="form-label">Dies totals</label>
-          <input class="form-input" type="number" id="vc-dies" min="0" placeholder="27">
-        </div>
-      </div>
-      <div class="text-sm mt8">Inclou els dies d'enguany més els arrossegats de l'any anterior.</div>
-      <button class="btn btn-primary mt12" onclick="saveVacCupo()">
-        <i class="ti ti-device-floppy"></i> Guardar quota
-      </button>
-    </div>
-    <div class="card">
       <div class="card-title">Seleccionar dies de vacances</div>
       <!-- Nav mes calendari vac -->
       <div class="sec-header" style="margin-bottom:10px;">
@@ -698,6 +681,22 @@ body {
         <input type="file" id="restore-file" accept=".json" style="display:none" onchange="restoreBackup(this)">
       </label>
       <div id="backup-status" style="display:none;margin-top:10px;font-size:13px;font-family:var(--mono);padding:10px;border-radius:var(--radius-sm);"></div>
+    </div>
+
+    <!-- Dies base vacances -->
+    <div class="card">
+      <div class="card-title">Dies de vacances</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6;">
+        Dies base anuals. Els dies no gaudits s'acumulen automàticament a l'any següent.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dies base per any</label>
+        <input class="form-input" type="number" id="vc-dies-base" min="1" max="60" placeholder="22">
+      </div>
+      <div id="vc-base-actual" style="font-size:12px;color:var(--text3);margin-top:6px;"></div>
+      <button class="btn btn-primary mt12" onclick="saveDiesBase()">
+        <i class="ti ti-device-floppy"></i> Guardar
+      </button>
     </div>
 
     <!-- Festius -->
@@ -797,7 +796,7 @@ function updateDayLabel(){
 }
 
 let userName='';
-let state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[]};
+let state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[],diesBase:22};
 let viewMonth=new Date().getMonth(),viewYear=new Date().getFullYear();
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear();
 let anualYear=new Date().getFullYear();
@@ -810,7 +809,7 @@ function loadAll(){
     const s=localStorage.getItem('hm_state');
     if(s){
       const parsed=JSON.parse(s);
-      state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[],...parsed};
+      state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[],diesBase:22,...parsed};
     }
   }catch(e){}
 }
@@ -838,7 +837,6 @@ function initApp(){
   document.getElementById('user-avatar').textContent=userName.slice(0,2).toUpperCase();
   document.getElementById('r-fecha').value=today();
   document.getElementById('p-mes').value=new Date().toISOString().slice(0,7);
-  document.getElementById('vc-anio').value=new Date().getFullYear();
   initChips();
   render();
   updateDayLabel();
@@ -1087,15 +1085,30 @@ function addFestivoLocal(){
 function deleteFestivoLocal(fecha){state.festivosLocales=state.festivosLocales.filter(f=>f.fecha!==fecha);saveAll();render();}
 function deleteFestivoAPI(fecha,y){const l=state.festivosAPI[String(y)]||[];state.festivosAPI[String(y)]=l.filter(f=>f.fecha!==fecha);saveAll();render();}
 
-function saveVacCupo(){
-  const anio=parseInt(document.getElementById('vc-anio').value);
-  const dies=parseInt(document.getElementById('vc-dies').value);
-  if(isNaN(anio)||isNaN(dies)||dies<0)return alert('Introdueix un any i dies vàlids.');
-  state.vacCupos=state.vacCupos.filter(c=>c.anio!==anio);
-  state.vacCupos.push({anio,dies});state.vacCupos.sort((a,b)=>b.anio-a.anio);
-  document.getElementById('vc-anio').value='';document.getElementById('vc-dies').value='';
+function saveDiesBase(){
+  const dies=parseInt(document.getElementById('vc-dies-base').value);
+  if(isNaN(dies)||dies<1)return alert('Introdueix un nombre vàlid de dies.');
+  state.diesBase=dies;
+  document.getElementById('vc-dies-base').value='';
   saveAll();render();
 }
+
+function calcDiesDisponibles(any){
+  const base=state.diesBase||22;
+  // Obtenir el primer any amb registres
+  const anysVac=state.vacaciones.map(v=>new Date(v.desde+'T00:00:00').getFullYear());
+  const primerAny=anysVac.length>0?Math.min(...anysVac):any;
+  if(any<=primerAny) return base;
+  // Acumulació recursiva (màxim 10 anys enrere per seguretat)
+  const anyAnterior=any-1;
+  const diesAnterior=calcDiesDisponibles(anyAnterior);
+  const {gaudides:gA,assignades:asgA}=diesVacStats(anyAnterior);
+  const arrossegament=Math.max(0,diesAnterior-gA-asgA);
+  return base+arrossegament;
+}
+
+// Legacy
+function saveVacCupo(){}
 function deleteVacCupo(anio){state.vacCupos=state.vacCupos.filter(c=>c.anio!==anio);saveAll();render();}
 // VAC CAL
 let vacCalMonth=new Date().getMonth(), vacCalYear=new Date().getFullYear();
@@ -1295,9 +1308,9 @@ function renderResumen(){
   const pcAny=pendentAny>0?'var(--red)':pendentAny<0?'var(--green)':'var(--text3)';
 
   // ── VACANCES ──
-  const cupoAny=state.vacCupos.find(c=>c.anio===y);
+  const totalDiesVac=calcDiesDisponibles(y);
   const {gaudides:vacGaud, assignades:vacAssig}=diesVacStats(y);
-  const vacDisp=cupoAny?(cupoAny.dies-vacGaud-vacAssig):null;
+  const vacDisp=totalDiesVac-vacGaud-vacAssig;
 
   // ── PROPER FESTIU ──
   const totsF=[
@@ -1362,10 +1375,9 @@ function renderResumen(){
     <!-- Vacances -->
     <div class="card">
       <div class="card-title">Vacances ${y}</div>
-      ${cupoAny?`
       <div style="${rowStyle}">
-        <span style="${lblStyle}">Dies totals assignats</span>
-        <span style="${valStyle};">${cupoAny.dies}</span>
+        <span style="${lblStyle}">Dies totals</span>
+        <span style="${valStyle};">${totalDiesVac}</span>
       </div>
       <div style="${rowStyle}">
         <span style="${lblStyle}">Ja gaudits</span>
@@ -1378,8 +1390,7 @@ function renderResumen(){
       <div style="${lastRowStyle}">
         <span style="${lblStyle}">Disponibles</span>
         <span style="${valStyle};color:${vacDisp<=3?'var(--red)':'var(--green)'};">${vacDisp}</span>
-      </div>`
-      :'<div style="font-size:13px;color:var(--text3);">Configura el teu cupo a Vacances.</div>'}
+      </div>
     </div>
 
     <!-- Proper festiu -->
@@ -1614,22 +1625,37 @@ function renderPago(){
 }
 
 function renderVacaciones(){
+  // Actualitzar info dies base
+  const baseEl=document.getElementById('vc-base-actual');
+  if(baseEl) baseEl.textContent=`Dies base actuals: ${state.diesBase||22} dies/any`;
+
   let ch='';
-  state.vacCupos.forEach(c=>{
-    const {gaudides,assignades}=diesVacStats(c.anio);
+  // Mostrar els últims 3 anys amb dades + any actual
+  const now=new Date();
+  const curY=now.getFullYear();
+  const anysAMostrar=new Set([curY, curY-1]);
+  state.vacaciones.forEach(v=>anysAMostrar.add(new Date(v.desde+'T00:00:00').getFullYear()));
+  const anysOrdenats=[...anysAMostrar].sort((a,b)=>b-a).slice(0,4);
+
+  anysOrdenats.forEach(any=>{
+    const totalDies=calcDiesDisponibles(any);
+    const {gaudides,assignades}=diesVacStats(any);
     const usats=gaudides+assignades;
-    const queden=c.dies-usats;
-    const pct=Math.min(100,Math.round((usats/c.dies)*100));
-    const pctGaud=Math.min(100,Math.round((gaudides/c.dies)*100));
+    const queden=totalDies-usats;
+    const base=state.diesBase||22;
+    const arrossegament=totalDies-base;
+    const pct=Math.min(100,Math.round((usats/totalDies)*100));
+    const pctGaud=Math.min(100,Math.round((gaudides/totalDies)*100));
     const barCls=queden<0?'over':queden<=3?'amber':'';
     const numCls=queden<0?'red':queden<=3?'amber':'green';
     ch+=`<div class="vac-block">
       <div class="vac-block-head">
-        <span class="vac-block-year">Vacances ${c.anio}</span>
-        <button class="icon-btn del" onclick="deleteVacCupo(${c.anio})"><i class="ti ti-trash"></i></button>
+        <span class="vac-block-year">Vacances ${any}</span>
       </div>
+      ${arrossegament>0?`<div style="font-size:12px;color:var(--blue);margin-bottom:10px;"><i class="ti ti-arrow-forward-up" style="font-size:13px;vertical-align:-2px;"></i> ${base} dies base + ${arrossegament} arrossegats = <strong>${totalDies} dies totals</strong></div>`
+      :`<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">${base} dies base</div>`}
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
-        <div class="vac-num"><div class="vac-num-val">${c.dies}</div><div class="vac-num-label">TOTALS</div></div>
+        <div class="vac-num"><div class="vac-num-val">${totalDies}</div><div class="vac-num-label">TOTALS</div></div>
         <div class="vac-num"><div class="vac-num-val" style="color:var(--blue);">${assignades}</div><div class="vac-num-label">ASSIGNADES</div></div>
         <div class="vac-num"><div class="vac-num-val" style="color:var(--text2);">${gaudides}</div><div class="vac-num-label">GAUDIDES</div></div>
         <div class="vac-num"><div class="vac-num-val ${numCls}">${queden}</div><div class="vac-num-label">${queden>=0?'DISPONIBLES':'EXCEDITS'}</div></div>
@@ -1638,10 +1664,7 @@ function renderVacaciones(){
         <div style="position:absolute;top:0;left:0;height:100%;width:${pct}%;background:var(--blue);border-radius:5px;opacity:0.3;"></div>
         <div class="progress-bar ${barCls}" style="width:${pctGaud}%;"></div>
       </div>
-      <div class="progress-info">
-        <span>${gaudides} gaudides · ${assignades} assignades</span>
-        <span>${pct}%</span>
-      </div>
+      <div class="progress-info"><span>${gaudides} gaudides · ${assignades} assignades</span><span>${pct}%</span></div>
       ${queden<=3&&queden>=0?`<div class="warn-msg amber">⚠ Queden ${queden} dies disponibles.</div>`:''}
       ${queden<0?`<div class="warn-msg red">⚠ Quota excedida en ${Math.abs(queden)} dies.</div>`:''}
     </div>`;
@@ -1756,7 +1779,7 @@ function restoreBackup(input){
       if(!confirm('Això sobreescriurà totes les dades actuals amb les de la còpia del '+backup.exportedAt.slice(0,10)+'. Continuar?')){
         input.value=''; return;
       }
-      state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[],...backup.state};
+      state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[],diesBase:22,...backup.state};
       if(backup.userName){
         userName=backup.userName;
         document.getElementById('header-name').textContent=userName;
