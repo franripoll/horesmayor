@@ -548,7 +548,7 @@ body {
 
   <!-- ANUAL -->
   <div id="tab-anual" class="section">
-    <div class="kpi-grid" id="kpi-anual"></div>
+    <div class="kpi-grid cols3" id="kpi-anual"></div>
     <div class="card">
       <div class="sec-header">
         <span class="sec-title" id="anual-title"></span>
@@ -1504,11 +1504,14 @@ function renderAnual(){
     return;
   }
   const tNet=yE.reduce((s,e)=>s+e.horas,0);
-  const tPag=state.pagos.filter(p=>p.mes.startsWith(String(y))).reduce((s,p)=>s+(p.pagadas||0),0);
+  const pagosAny=state.pagos.filter(p=>p.mes.startsWith(String(y)));
+  const tPag=pagosAny.reduce((s,p)=>s+(p.pagadas||0),0);
+  const tEuros=pagosAny.reduce((s,p)=>s+(p.import||0),0);
   const nc=tNet>0?'green':tNet<0?'red':'';
   document.getElementById('kpi-anual').innerHTML=`
     <div class="kpi"><div class="kpi-label">EXTRAS</div><div class="kpi-value ${nc} small">${tNet>0?'+':''}${fmtH(tNet)}</div></div>
-    <div class="kpi"><div class="kpi-label">HORES PAGADES</div><div class="kpi-value small">${tPag>0?fmtH(tPag):'—'}</div></div>`;
+    <div class="kpi"><div class="kpi-label">HORES PAGADES</div><div class="kpi-value small">${tPag>0?fmtH(tPag):'—'}</div></div>
+    <div class="kpi"><div class="kpi-label">TOTAL COBRAT</div><div class="kpi-value small">${tEuros>0?fmtEur(tEuros):'—'}</div></div>`;
 
   // Gràfic de barres per mes
   const md=MONTHS_S.map((name,m)=>{const net=netH(m,y);return{name,net};});
