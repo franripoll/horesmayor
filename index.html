@@ -443,7 +443,7 @@ body {
         <div style="position:relative;">
           <input class="form-input" type="date" id="r-fecha" onchange="updateDayLabel()"
             style="position:absolute;inset:0;opacity:0;z-index:2;cursor:pointer;">
-          <div class="form-input" id="r-fecha-display" style="display:flex;align-items:center;gap:0;pointer-events:none;color:var(--text);">
+          <div class="form-input" id="r-fecha-display" style="display:flex;align-items:center;justify-content:center;gap:0;pointer-events:none;">
             <span id="r-day-label" style="color:var(--text);font-weight:600;"></span><span id="r-date-label" style="color:var(--text2);"></span>
           </div>
         </div>
@@ -508,7 +508,7 @@ body {
 
   <!-- CALENDARIO -->
   <div id="tab-calendario" class="section">
-    <div class="kpi-grid cols4" id="kpi-cal"></div>
+    <div class="kpi-grid cols3" id="kpi-cal"></div>
     <div class="card">
       <div class="sec-header">
         <span class="sec-title" id="cal-title"></span>
@@ -1353,12 +1353,32 @@ function renderCalendario(){
   const m=calMonth,y=calYear;
   document.getElementById('cal-title').textContent=MONTHS[m]+' '+y;
   document.getElementById('festivos-year').textContent=y;
-  const pos=posH(m,y),neg=negH(m,y),net=pos+neg,nc=net>0?'green':net<0?'red':'';
+  const net=netH(m,y);
+  const nc=net>0?'green':net<0?'red':'';
+
+  // Import pagat aquest mes
+  const pago=state.pagos.find(p=>{const[py,pm]=p.mes.split('-').map(Number);return py===y&&pm-1===m;});
+  const importPagat=pago?pago.import:null;
+
+  // Dies de vacances gaudits aquest mes
+  const mesStr=y+'-'+String(m+1).padStart(2,'0');
+  const diesVacMes=state.vacaciones.reduce((s,v)=>{
+    const dies=(v.diesList||[]).filter(d=>d.startsWith(mesStr)&&d<=today()).length;
+    if(dies>0)return s+dies;
+    // compatibilitat registres antics
+    if(!v.diesList&&v.desde.startsWith(mesStr)){
+      const dim2=new Date(y,m+1,0).getDate();
+      let c=0;
+      for(let d=1;d<=dim2;d++){const ds2=mesStr+'-'+String(d).padStart(2,'0');if(ds2>=v.desde&&ds2<=v.hasta&&ds2<=today())c++;}
+      return s+c;
+    }
+    return s;
+  },0);
+
   document.getElementById('kpi-cal').innerHTML=`
-    <div class="kpi"><div class="kpi-label">EXTRA</div><div class="kpi-value green small">${pos>0?'+':''}${fmtH(pos)}</div></div>
-    <div class="kpi"><div class="kpi-label">EIXIDA</div><div class="kpi-value red small">${neg<0?fmtH(neg):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">NET</div><div class="kpi-value ${nc} small">${net!==0?(net>0?'+':'')+fmtH(net):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">DIES</div><div class="kpi-value small">${mEntries(m,y).length}</div></div>`;
+    <div class="kpi"><div class="kpi-label">HORES EXTRA</div><div class="kpi-value ${nc} small">${net!==0?(net>0?'+':'')+fmtH(net):'—'}</div></div>
+    <div class="kpi"><div class="kpi-label">IMPORT PAGAT</div><div class="kpi-value small">${importPagat!==null?fmtEur(importPagat):'—'}</div></div>
+    <div class="kpi"><div class="kpi-label">DIES VACANCES</div><div class="kpi-value small">${diesVacMes>0?diesVacMes+'d':'—'}</div></div>`;
 
   const first=new Date(y,m,1);let sdow=first.getDay();sdow=sdow===0?6:sdow-1;
   const dim=new Date(y,m+1,0).getDate();const tod=today();
