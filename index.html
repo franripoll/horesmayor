@@ -1273,13 +1273,11 @@ function renderResumen(){
   const pag=pago?pago.pagadas:null;
   const nc=net>0?'green':net<0?'red':'';
 
-  // Calcular total acumulat i media €/hora
+  // Preu/hora: usar el mes més recent amb dades
   const totalAcum=netAll();
-  const pagosAmbImport=state.pagos.filter(p=>p.pagadas>0&&p.import>0);
-  const mediaPreuHora=pagosAmbImport.length>0
-    ? pagosAmbImport.reduce((s,p)=>s+(p.import/p.pagadas),0)/pagosAmbImport.length
-    : null;
-  const eurosAcum=mediaPreuHora!==null?totalAcum*mediaPreuHora:null;
+  const pagosAmbImport=state.pagos.filter(p=>p.pagadas>0&&p.import>0).sort((a,b)=>b.mes.localeCompare(a.mes));
+  const preuActual=pagosAmbImport.length>0?(pagosAmbImport[0].import/pagosAmbImport[0].pagadas):null;
+  const eurosAcum=preuActual!==null?totalAcum*preuActual:null;
   const ac=totalAcum>0?'green':totalAcum<0?'red':'';
 
   // KPIs del mes + total acumulat destacat
@@ -1292,7 +1290,7 @@ function renderResumen(){
   const bannerBorder=totalAcum>0?'var(--green-border)':'var(--red-border)';
   const bannerText=totalAcum>0?'var(--green)':'var(--red)';
   const eurosHtml=eurosAcum!==null
-    ?`<div style="font-size:13px;color:${bannerText};opacity:0.8;margin-top:2px;">≈ ${fmtEur(eurosAcum)} · ${fmtEur(mediaPreuHora)}/h de mitjana</div>`
+    ?`<div style="font-size:13px;color:${bannerText};opacity:0.8;margin-top:2px;">≈ ${fmtEur(eurosAcum)} · ${fmtEur(preuActual)}/h (preu actual)</div>`
     :`<div style="font-size:12px;color:var(--text3);margin-top:2px;">Afegeix dades de pagament per veure l'import</div>`;
 
   const bannerHtml=`<div style="background:${bannerColor};border:1px solid ${bannerBorder};border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;">
@@ -1510,11 +1508,20 @@ function renderAnual(){
   const tPendent=tNet-tPag;
   const nc=tNet>0?'green':tNet<0?'red':'';
   const pc=tPendent>0?'red':tPendent<0?'green':'';
+  // Preu actual: mes més recent amb dades (de qualsevol any)
+  const totsPagements=state.pagos.filter(p=>p.pagadas>0&&p.import>0).sort((a,b)=>b.mes.localeCompare(a.mes));
+  const preuActualA=totsPagements.length>0?(totsPagements[0].import/totsPagements[0].pagadas):null;
+  const eurosPendent=preuActualA!==null?tPendent*preuActualA:null;
+  const pendentLabel=tPendent!==0
+    ?`${(tPendent>0?'+':'')+fmtH(tPendent)}`:'—';
+  const pendentSub=tPendent!==0
+    ?`<div style="font-size:11px;color:var(--text3);margin-top:3px;">${(tPendent/8).toFixed(1).replace('.',',')} dies${eurosPendent!==null?' · ≈'+fmtEur(eurosPendent):''}</div>`
+    :'';
   document.getElementById('kpi-anual').innerHTML=`
     <div class="kpi"><div class="kpi-label">EXTRAS</div><div class="kpi-value ${nc} small">${tNet>0?'+':''}${fmtH(tNet)}</div></div>
     <div class="kpi"><div class="kpi-label">HORES PAGADES</div><div class="kpi-value small">${tPag>0?fmtH(tPag):'—'}</div></div>
     <div class="kpi"><div class="kpi-label">TOTAL COBRAT</div><div class="kpi-value small">${tEuros>0?fmtEur(tEuros):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">PENDENTS</div><div class="kpi-value ${pc} small">${tPendent!==0?(tPendent>0?'+':'')+fmtH(tPendent):'—'}</div>${tPendent!==0?`<div style="font-size:11px;color:var(--text3);margin-top:3px;">${(tPendent/8).toFixed(1).replace('.',',')} dies (8h/dia)</div>`:''}</div>`;
+    <div class="kpi"><div class="kpi-label">PENDENTS</div><div class="kpi-value ${pc} small">${pendentLabel}</div>${pendentSub}</div>`;
 
   // Gràfic de barres per mes
   const md=MONTHS_S.map((name,m)=>{const net=netH(m,y);return{name,net};});
