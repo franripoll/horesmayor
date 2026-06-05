@@ -608,18 +608,12 @@ body {
       <div class="card-title">Seleccionar dies de vacances</div>
       <!-- Nav mes calendari vac -->
       <div class="sec-header" style="margin-bottom:10px;">
-        <div style="display:flex;align-items:center;gap:6px;flex:1;">
-          <select class="form-input" id="vac-cal-mes" onchange="setVacCalFromSelect()" style="flex:1;padding:6px 10px;font-size:14px;font-weight:600;">
-            <option value="0">Gener</option><option value="1">Febrer</option><option value="2">Març</option>
-            <option value="3">Abril</option><option value="4">Maig</option><option value="5">Juny</option>
-            <option value="6">Juliol</option><option value="7">Agost</option><option value="8">Setembre</option>
-            <option value="9">Octubre</option><option value="10">Novembre</option><option value="11">Desembre</option>
-          </select>
-          <select class="form-input" id="vac-cal-any" onchange="setVacCalFromSelect()" style="width:80px;padding:6px 10px;font-size:14px;font-weight:600;"></select>
+        <div style="position:relative;">
+          <input type="month" id="vac-cal-month-picker" style="position:absolute;inset:0;opacity:0;z-index:2;cursor:pointer;" onchange="setVacCalFromPicker()">
+          <span class="sec-title" id="vac-cal-title" style="cursor:pointer;border-bottom:1.5px dashed var(--border2);"></span>
         </div>
         <div class="nav-arrows">
           <button class="arrow-btn" onclick="changeVacCalMonth(-1)"><i class="ti ti-chevron-left"></i></button>
-          <button class="arrow-btn" onclick="goVacCalToday()"><i class="ti ti-home"></i></button>
           <button class="arrow-btn" onclick="changeVacCalMonth(1)"><i class="ti ti-chevron-right"></i></button>
         </div>
       </div>
@@ -1192,46 +1186,33 @@ function changeVacCalMonth(dir){
   vacCalMonth+=dir;
   if(vacCalMonth<0){vacCalMonth=11;vacCalYear--;}
   if(vacCalMonth>11){vacCalMonth=0;vacCalYear++;}
-  syncVacCalSelectors();
   renderVacCal();
+}
+
+function setVacCalFromPicker(){
+  const val=document.getElementById('vac-cal-month-picker').value;
+  if(!val)return;
+  const[y,m]=val.split('-').map(Number);
+  vacCalYear=y;vacCalMonth=m-1;
+  renderVacCal();
+}
+
+function syncVacCalTitle(){
+  const titleEl=document.getElementById('vac-cal-title');
+  const pickerEl=document.getElementById('vac-cal-month-picker');
+  if(titleEl)titleEl.textContent=MONTHS[vacCalMonth]+' '+vacCalYear;
+  if(pickerEl)pickerEl.value=vacCalYear+'-'+String(vacCalMonth+1).padStart(2,'0');
 }
 
 function goVacCalToday(){
   const now=new Date();
   vacCalMonth=now.getMonth();vacCalYear=now.getFullYear();
-  syncVacCalSelectors();
   renderVacCal();
 }
 
-function setVacCalFromSelect(){
-  const mes=document.getElementById('vac-cal-mes');
-  const any=document.getElementById('vac-cal-any');
-  if(mes&&any){
-    vacCalMonth=parseInt(mes.value);
-    vacCalYear=parseInt(any.value);
-    renderVacCal();
-  }
-}
-
-function syncVacCalSelectors(){
-  const mes=document.getElementById('vac-cal-mes');
-  const any=document.getElementById('vac-cal-any');
-  if(mes) mes.value=vacCalMonth;
-  if(any) any.value=vacCalYear;
-}
-
-function initVacCalSelectors(){
-  const any=document.getElementById('vac-cal-any');
-  if(!any) return;
-  any.innerHTML='';
-  const curY=new Date().getFullYear();
-  for(let y=curY-3;y<=curY+5;y++){
-    const opt=document.createElement('option');
-    opt.value=y;opt.textContent=y;
-    any.appendChild(opt);
-  }
-  syncVacCalSelectors();
-}
+function setVacCalFromSelect(){}
+function syncVacCalSelectors(){}
+function initVacCalSelectors(){}
 
 function isLaboral(dateStr){
   const d=new Date(dateStr+'T00:00:00');
@@ -1302,8 +1283,7 @@ function deleteVac(id){
 }
 
 function renderVacCal(){
-  document.getElementById('vac-cal-title').textContent='';
-  syncVacCalSelectors();
+  syncVacCalTitle();
   const m=vacCalMonth,y=vacCalYear;
   const first=new Date(y,m,1);let sdow=first.getDay();sdow=sdow===0?6:sdow-1;
   const dim=new Date(y,m+1,0).getDate();
