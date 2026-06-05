@@ -533,13 +533,16 @@ body {
     </div>
     <div id="cal-detail" style="display:none" class="detail-panel"></div>
 
-    <!-- Festivos - solo lista, gestión en Ajustos -->
+    <!-- Festivos - lista mode -->
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div class="card-title" style="margin-bottom:0;">Festius — <span id="festivos-year"></span></div>
-        <button onclick="toggleAjustos()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:var(--mono);display:flex;align-items:center;gap:4px;"><i class="ti ti-settings" style="font-size:14px;"></i> Gestionar</button>
+        <button onclick="toggleAjustos()" style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:4px;"><i class="ti ti-settings" style="font-size:14px;"></i> Gestionar</button>
       </div>
-      <div class="festivo-tags" id="festivos-lista"></div>
+      <!-- Banner proper festiu -->
+      <div id="proxim-festiu-banner" style="display:none;"></div>
+      <!-- Llista festius -->
+      <div id="festivos-lista"></div>
     </div>
   </div>
 
@@ -839,7 +842,15 @@ function initApp(){
 }
 
 function today(){return new Date().toISOString().slice(0,10);}
-function fmtH(n){const s=n<0?'−':'';const a=Math.abs(n);const h=Math.floor(a),m=Math.round((a-h)*60);return s+h+'h '+m.toString().padStart(2,'0');}
+function fmtH(n){
+  const sign=n<0?'−':'';
+  const abs=Math.abs(n);
+  const h=Math.floor(abs);
+  const min=Math.round((abs-h)*60);
+  if(h===0) return sign+min+"'";
+  if(min===0) return sign+h+'h';
+  return sign+h+'h '+min+"'";
+}
 function fmtEur(n){return parseFloat(n).toFixed(2).replace('.',',')+'€';}
 function ds(y,m,d){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
 
@@ -953,6 +964,38 @@ function diasVacUsados(y){
   return state.vacaciones.filter(v=>{
     const d=new Date(v.desde+'T00:00:00');return d.getFullYear()===y;
   }).reduce((s,v)=>s+(v.dies||v.dias||0),0);
+}
+
+function diesVacStats(y){
+  const tod=today();
+  let gaudides=0, assignades=0;
+  state.vacaciones.filter(v=>new Date(v.desde+'T00:00:00').getFullYear()===y).forEach(v=>{
+    const dies=v.dies||v.dias||0;
+    // Si la data fins és passada, tots els dies son gaudits
+    // Si la data des és futura, tots son assignats
+    // Si el període és parcialment passat, comptem per dies individuals
+    if(v.diesList){
+      v.diesList.forEach(d=>{
+        if(d<=tod) gaudides++;
+        else assignades++;
+      });
+    } else {
+      // Registres antics sense diesList
+      if(v.hasta<=tod) gaudides+=dies;
+      else if(v.desde>tod) assignades+=dies;
+      else {
+        // Període parcialment passat
+        const start=new Date(v.desde+'T00:00:00');
+        const end=new Date(v.hasta+'T00:00:00');
+        for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+          const ds=d.toISOString().slice(0,10);
+          if(ds<=tod) gaudides++;
+          else assignades++;
+        }
+      }
+    }
+  });
+  return {gaudides, assignades};
 }
 
 function startEdit(id){
@@ -1349,12 +1392,54 @@ function renderCalendario(){
   const apiList=state.festivosAPI[String(y)]||[];
   const locals=state.festivosLocales.filter(f=>f.fecha.startsWith(String(y)));
 
-  // Lista compacta en calendari (solo muestra, sin gestión)
-  let fHtmlCal='';
-  if(apiList.length===0){fHtmlCal='<div class="text-sm" style="margin-bottom:4px;">Sense festius CV. Gestiona\'ls a Ajustos.</div>';}
-  else{apiList.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');fHtmlCal+=`<span class="ftag api"><i class="ti ti-flag" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}</span>`;});}
-  locals.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');fHtmlCal+=`<span class="ftag local"><i class="ti ti-map-pin" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}</span>`;});
-  document.getElementById('festivos-lista').innerHTML=fHtmlCal;
+  // Festius — llista amb colors i proper festiu
+  const allYear=[...apiList,...locals].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+
+  // Proper festiu (inclou any seguent si cal)
+  const nextYearAPI=state.festivosAPI[String(y+1)]||[];
+  const allFuture=[...allYear,...nextYearAPI,...state.festivosLocales.filter(f=>f.fecha.startsWith(String(y+1)))].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const proxim=allFuture.find(f=>f.fecha>tod);
+  const bannerEl=document.getElementById('proxim-festiu-banner');
+  if(proxim&&bannerEl){
+    const dp=new Date(proxim.fecha+'T00:00:00');
+    const diffDies=Math.round((dp-new Date(tod+'T00:00:00'))/86400000);
+    const diesText=diffDies===1?'demà':diffDies===0?'avui':`en ${diffDies} dies`;
+    const dayName=DAYS_FULL[dp.getDay()];
+    const monthsFull=['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'];
+    bannerEl.style.display='block';
+    bannerEl.innerHTML=`<div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:3px;">PROPER FESTIU</div>
+      <div style="font-size:15px;font-weight:700;color:var(--green);">${proxim.nombre}</div>
+      <div style="font-size:12px;color:var(--green);opacity:0.8;margin-top:2px;">${dayName} ${dp.getDate()} de ${monthsFull[dp.getMonth()]} · <strong>${diesText}</strong></div>
+    </div>`;
+  } else if(bannerEl){bannerEl.style.display='none';}
+
+  if(allYear.length===0){
+    document.getElementById('festivos-lista').innerHTML='<div class="text-sm" style="padding:8px 0;">Sense festius. Carrega\'ls a Ajustos.</div>';
+  } else {
+    const monthsFull2=['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'];
+    document.getElementById('festivos-lista').innerHTML=allYear.map(f=>{
+      const dp2=new Date(f.fecha+'T00:00:00');
+      const passat=f.fecha<tod;
+      const esAvui=f.fecha===tod;
+      const isLocal=state.festivosLocales.some(l=>l.fecha===f.fecha);
+      const colorText=passat?'var(--text3)':esAvui?'var(--accent)':'var(--text)';
+      const colorDate=passat?'var(--text3)':esAvui?'var(--accent)':'var(--text2)';
+      const iconN=isLocal?'ti-map-pin':'ti-flag';
+      const iconColor=isLocal?'var(--amber)':passat?'var(--text3)':'var(--red)';
+      const strike=passat?'text-decoration:line-through;':'';
+      const diffD=Math.round((new Date(f.fecha+'T00:00:00')-new Date(tod+'T00:00:00'))/86400000);
+      return`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">
+        <i class="ti ${iconN}" style="font-size:14px;color:${iconColor};flex-shrink:0;"></i>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:${colorText};${strike}">${f.nombre}</div>
+          <div style="font-size:11px;color:${colorDate};">${DAYS_FULL[dp2.getDay()]} ${dp2.getDate()} ${monthsFull2[dp2.getMonth()]}</div>
+        </div>
+        ${esAvui?'<span style="font-size:10px;background:var(--amber-bg);color:var(--amber);border-radius:20px;padding:2px 8px;font-weight:700;">AVUI</span>':''}
+        ${!passat&&!esAvui?`<span style="font-size:11px;color:var(--green);font-weight:600;">${diffD}d</span>`:''}
+      </div>`;
+    }).join('');
+  }
 
   // Lista completa en ajustos (con botones de eliminar)
   renderFestivosAjustos(y);
@@ -1448,23 +1533,33 @@ function renderPago(){
 function renderVacaciones(){
   let ch='';
   state.vacCupos.forEach(c=>{
-    const usats=diasVacUsados(c.anio),queden=c.dies-usats;
+    const {gaudides,assignades}=diesVacStats(c.anio);
+    const usats=gaudides+assignades;
+    const queden=c.dies-usats;
     const pct=Math.min(100,Math.round((usats/c.dies)*100));
-    const barCls=queden<0?'red':queden<=3?'amber':'';
+    const pctGaud=Math.min(100,Math.round((gaudides/c.dies)*100));
+    const barCls=queden<0?'over':queden<=3?'amber':'';
     const numCls=queden<0?'red':queden<=3?'amber':'green';
     ch+=`<div class="vac-block">
       <div class="vac-block-head">
         <span class="vac-block-year">Vacances ${c.anio}</span>
         <button class="icon-btn del" onclick="deleteVacCupo(${c.anio})"><i class="ti ti-trash"></i></button>
       </div>
-      <div class="vac-nums">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
         <div class="vac-num"><div class="vac-num-val">${c.dies}</div><div class="vac-num-label">TOTALS</div></div>
-        <div class="vac-num"><div class="vac-num-val" style="color:var(--text2);">${usats}</div><div class="vac-num-label">GAUDITS</div></div>
+        <div class="vac-num"><div class="vac-num-val" style="color:var(--blue);">${assignades}</div><div class="vac-num-label">ASSIGNADES</div></div>
+        <div class="vac-num"><div class="vac-num-val" style="color:var(--text2);">${gaudides}</div><div class="vac-num-label">GAUDIDES</div></div>
         <div class="vac-num"><div class="vac-num-val ${numCls}">${queden}</div><div class="vac-num-label">${queden>=0?'DISPONIBLES':'EXCEDITS'}</div></div>
       </div>
-      <div class="progress-bg"><div class="progress-bar ${barCls}" style="width:${pct}%"></div></div>
-      <div class="progress-info"><span>${usats} de ${c.dies} dies</span><span>${pct}%</span></div>
-      ${queden<=3&&queden>=0?`<div class="warn-msg amber">⚠ Queden ${queden} dies.</div>`:''}
+      <div class="progress-bg" style="position:relative;height:10px;">
+        <div style="position:absolute;top:0;left:0;height:100%;width:${pct}%;background:var(--blue);border-radius:5px;opacity:0.3;"></div>
+        <div class="progress-bar ${barCls}" style="width:${pctGaud}%;"></div>
+      </div>
+      <div class="progress-info">
+        <span>${gaudides} gaudides · ${assignades} assignades</span>
+        <span>${pct}%</span>
+      </div>
+      ${queden<=3&&queden>=0?`<div class="warn-msg amber">⚠ Queden ${queden} dies disponibles.</div>`:''}
       ${queden<0?`<div class="warn-msg red">⚠ Quota excedida en ${Math.abs(queden)} dies.</div>`:''}
     </div>`;
   });
@@ -1668,6 +1763,22 @@ function importExcel(input){
 loadAll();
 if(userName){initApp();}
 else{document.getElementById('splash-name').focus();}
+
+// Actualitzar data automàticament quan l'usuari torna a l'app
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible'){
+    const fechaInput = document.getElementById('r-fecha');
+    if(fechaInput && !editingId){
+      // Si la data del camp és d'ahir o anterior, actualitzar a avui
+      const currentVal = fechaInput.value;
+      const todayVal = today();
+      if(currentVal && currentVal < todayVal){
+        fechaInput.value = todayVal;
+        updateDayLabel();
+      }
+    }
+  }
+});
 
 // Service Worker
 if('serviceWorker' in navigator){
