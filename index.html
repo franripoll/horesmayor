@@ -431,6 +431,10 @@ body {
     <input class="splash-input" type="text" id="splash-name" placeholder="El teu nom..." maxlength="30" autocomplete="off">
     <button class="splash-btn" onclick="startApp()">Entrar <i class="ti ti-arrow-right"></i></button>
   </div>
+  <div style="position:absolute;bottom:calc(var(--safe-bottom) + 24px);left:0;right:0;text-align:center;">
+    <div style="font-size:11px;color:var(--text3);letter-spacing:0.5px;margin-bottom:4px;font-family:var(--mono);">fet amb 🧡 per</div>
+    <div style="font-size:15px;font-weight:800;color:var(--accent);letter-spacing:-0.5px;">franripoll</div>
+  </div>
 </div>
 
 <!-- APP -->
@@ -608,10 +612,7 @@ body {
       <div class="card-title">Seleccionar dies de vacances</div>
       <!-- Nav mes calendari vac -->
       <div class="sec-header" style="margin-bottom:10px;">
-        <div style="position:relative;">
-          <input type="month" id="vac-cal-month-picker" style="position:absolute;inset:0;opacity:0;z-index:2;cursor:pointer;" onchange="setVacCalFromPicker()">
-          <span class="sec-title" id="vac-cal-title" style="cursor:pointer;border-bottom:1.5px dashed var(--border2);"></span>
-        </div>
+        <span class="sec-title" id="vac-cal-title"></span>
         <div class="nav-arrows">
           <button class="arrow-btn" onclick="changeVacCalMonth(-1)"><i class="ti ti-chevron-left"></i></button>
           <button class="arrow-btn" onclick="changeVacCalMonth(1)"><i class="ti ti-chevron-right"></i></button>
@@ -768,8 +769,16 @@ body {
     </div>
 
     <!-- Info app -->
-    <div style="text-align:center;padding:16px 0 8px;font-size:12px;color:var(--text3);font-family:var(--mono);">
-      HoresMayor · Ceràmica Mayor<br>Les dades es guarden al teu mòbil
+    <div style="text-align:center;padding:20px 0 8px;">
+      <div style="font-size:18px;font-weight:800;letter-spacing:-0.5px;margin-bottom:2px;">Hores<span style="color:var(--accent);">Mayor</span></div>
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Ceràmica Mayor</div>
+      <div style="display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;">
+        <span style="font-size:12px;color:var(--text3);">fet amb</span>
+        <span style="font-size:14px;">🧡</span>
+        <span style="font-size:12px;color:var(--text3);">per</span>
+        <span style="font-size:13px;font-weight:800;color:var(--accent);letter-spacing:-0.3px;">franripoll</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:10px;font-family:var(--mono);">Les dades es guarden al teu mòbil</div>
     </div>
   </div>
 
@@ -886,7 +895,6 @@ function initApp(){
   document.getElementById('r-fecha').value=today();
   document.getElementById('p-mes').value=new Date().toISOString().slice(0,7);
   initChips();
-  initVacCalSelectors();
   render();
   updateDayLabel();
   checkBackupReminder();
@@ -1189,31 +1197,6 @@ function changeVacCalMonth(dir){
   renderVacCal();
 }
 
-function setVacCalFromPicker(){
-  const val=document.getElementById('vac-cal-month-picker').value;
-  if(!val)return;
-  const[y,m]=val.split('-').map(Number);
-  vacCalYear=y;vacCalMonth=m-1;
-  renderVacCal();
-}
-
-function syncVacCalTitle(){
-  const titleEl=document.getElementById('vac-cal-title');
-  const pickerEl=document.getElementById('vac-cal-month-picker');
-  if(titleEl)titleEl.textContent=MONTHS[vacCalMonth]+' '+vacCalYear;
-  if(pickerEl)pickerEl.value=vacCalYear+'-'+String(vacCalMonth+1).padStart(2,'0');
-}
-
-function goVacCalToday(){
-  const now=new Date();
-  vacCalMonth=now.getMonth();vacCalYear=now.getFullYear();
-  renderVacCal();
-}
-
-function setVacCalFromSelect(){}
-function syncVacCalSelectors(){}
-function initVacCalSelectors(){}
-
 function isLaboral(dateStr){
   const d=new Date(dateStr+'T00:00:00');
   const dow=d.getDay();
@@ -1283,7 +1266,7 @@ function deleteVac(id){
 }
 
 function renderVacCal(){
-  syncVacCalTitle();
+  document.getElementById('vac-cal-title').textContent=MONTHS[vacCalMonth]+' '+vacCalYear;
   const m=vacCalMonth,y=vacCalYear;
   const first=new Date(y,m,1);let sdow=first.getDay();sdow=sdow===0?6:sdow-1;
   const dim=new Date(y,m+1,0).getDate();
