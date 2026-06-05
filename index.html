@@ -445,6 +445,14 @@ body {
     </div>
   </header>
 
+  <!-- BACKUP REMINDER -->
+  <div id="backup-reminder" style="display:none;background:var(--amber-bg);border-bottom:1px solid var(--amber-border);padding:10px 16px;align-items:center;gap:10px;">
+    <i class="ti ti-cloud-upload" style="font-size:20px;color:var(--amber);flex-shrink:0;"></i>
+    <div style="flex:1;font-size:13px;color:var(--amber);">Recorda fer la còpia de seguretat mensual</div>
+    <button onclick="exportBackupWithReminder()" style="background:var(--amber);color:#fff;border:none;border-radius:var(--radius-sm);padding:6px 12px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Exportar</button>
+    <button onclick="dismissBackupReminder()" style="background:none;border:none;color:var(--amber);cursor:pointer;padding:4px;font-size:18px;line-height:1;">×</button>
+  </div>
+
   <!-- REGISTRO -->
   <div id="tab-registro" class="section active">
     <div class="card" id="form-card">
@@ -700,7 +708,7 @@ body {
       <div class="form-row form-group">
         <div>
           <label class="form-label">Any d'inici</label>
-          <input class="form-input" type="number" id="vc-any-inici" min="2020" max="2040" placeholder="${new Date().getFullYear()}">
+          <input class="form-input" type="number" id="vc-any-inici" min="2020" max="2040" placeholder="2026">
         </div>
         <div>
           <label class="form-label">Dies arrossegats</label>
@@ -834,6 +842,29 @@ function saveAll(){
   }catch(e){}
 }
 
+function checkBackupReminder(){
+  const now=new Date();
+  const curMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const lastBackupMonth=localStorage.getItem('hm_last_backup_month')||'';
+  if(lastBackupMonth===curMonth) return; // Ja s'ha fet còpia aquest mes
+  // Mostrar banner
+  const banner=document.getElementById('backup-reminder');
+  if(banner) banner.style.display='flex';
+}
+
+function dismissBackupReminder(){
+  const banner=document.getElementById('backup-reminder');
+  if(banner) banner.style.display='none';
+}
+
+function exportBackupWithReminder(){
+  exportBackup();
+  const now=new Date();
+  const curMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  localStorage.setItem('hm_last_backup_month',curMonth);
+  dismissBackupReminder();
+}
+
 function startApp(){
   const name=document.getElementById('splash-name').value.trim();
   if(!name)return;
@@ -854,6 +885,7 @@ function initApp(){
   initChips();
   render();
   updateDayLabel();
+  checkBackupReminder();
 }
 
 function today(){return new Date().toISOString().slice(0,10);}
@@ -1116,16 +1148,24 @@ function saveDiesBase(){
 
 function calcDiesDisponibles(any){
   const base=state.diesBase||22;
-  // Si tenim any d'inici configurat i aquest any és l'any d'inici
-  if(state.anyInici&&state.diesArrossegatsInici>=0&&any===state.anyInici){
-    return base+(state.diesArrossegatsInici||0);
+  const anyInici=state.anyInici||null;
+  const diesInici=state.diesArrossegatsInici||0;
+
+  // Si tenim any d'inici configurat
+  if(anyInici){
+    if(any<anyInici) return 0; // Anys anteriors a l'inici: no comptem
+    if(any===anyInici) return base+diesInici; // Any d'inici: base + arrossegament inicial
+  } else {
+    // Sense any d'inici: el primer any sempre és base sense arrossegament
+    const anysVac=state.vacaciones.map(v=>new Date(v.desde+'T00:00:00').getFullYear());
+    const primerAny=anysVac.length>0?Math.min(...anysVac):any;
+    if(any<=primerAny) return base;
   }
-  // Primer any amb registres (si no hi ha any d'inici configurat)
-  const anyIniciEfectiu=state.anyInici||any;
-  if(any<=anyIniciEfectiu) return base;
-  // Acumulació recursiva
+
+  // Anys posteriors: base + el que va sobrar de l'any anterior
   const anyAnterior=any-1;
   const diesAnterior=calcDiesDisponibles(anyAnterior);
+  if(diesAnterior===0) return base; // L'any anterior era anterior a l'inici
   const {gaudides:gA,assignades:asgA}=diesVacStats(anyAnterior);
   const arrossegament=Math.max(0,diesAnterior-gA-asgA);
   return base+arrossegament;
@@ -1908,7 +1948,6 @@ document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'visible'){
     const fechaInput = document.getElementById('r-fecha');
     if(fechaInput && !editingId){
-      // Si la data del camp és d'ahir o anterior, actualitzar a avui
       const currentVal = fechaInput.value;
       const todayVal = today();
       if(currentVal && currentVal < todayVal){
@@ -1916,6 +1955,7 @@ document.addEventListener('visibilitychange', function(){
         updateDayLabel();
       }
     }
+    checkBackupReminder();
   }
 });
 
