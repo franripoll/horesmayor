@@ -394,7 +394,21 @@ body {
 }
 .import-drop:active { border-color: var(--accent); background: rgba(232,197,71,0.05); }
 
-/* VAC CAL */
+/* GRAELLA MESOS ANUAL */
+.month-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.month-card { border-radius: 12px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; min-height: 82px; justify-content: center; gap: 3px; border: 1px solid transparent; cursor: default; }
+.month-card.pos { background: var(--green-bg); border-color: var(--green-border); }
+.month-card.neg { background: var(--red-bg); border-color: var(--red-border); }
+.month-card.empty { background: var(--surface2); border-color: var(--border); }
+.month-card.cur { border-width: 2px; border-color: var(--accent) !important; }
+.month-name { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text3); }
+.month-card.pos .month-name { color: var(--green); }
+.month-card.neg .month-name { color: var(--red); }
+.month-card.cur .month-name { color: var(--accent); }
+.month-hours { font-size: 17px; font-weight: 800; color: var(--text3); }
+.month-card.pos .month-hours { color: var(--green); }
+.month-card.neg .month-hours { color: var(--red); }
+.month-euros { font-size: 11px; font-weight: 600; color: var(--text3); }
 .cal-cell.vac-sel { background: var(--green-bg) !important; border-color: var(--green) !important; }
 .cal-cell.vac-sel .day-n { color: var(--green); font-weight: 700; }
 .cal-cell.vac-existing { background: #E8F5E9; }
@@ -1528,13 +1542,12 @@ function selectCalDay(d){selectedDate=selectedDate===d?null:d;renderCalendario()
 
 function renderAnual(){
   const y=anualYear;
+  const now=new Date();
+  const curM=now.getMonth(), curY=now.getFullYear();
   document.getElementById('anual-title').textContent='Resum '+y;
   const yE=yEntries(y);
-  if(!yE.length){
-    document.getElementById('kpi-anual').innerHTML='';
-    document.getElementById('anual-chart').innerHTML='<div class="empty-state"><i class="ti ti-calendar-off"></i><p>Sense dades per a '+y+'</p></div>';
-    return;
-  }
+
+  // KPIs (sempre visibles)
   const tNet=yE.reduce((s,e)=>s+e.horas,0);
   const pagosAny=state.pagos.filter(p=>p.mes.startsWith(String(y)));
   const tPag=pagosAny.reduce((s,p)=>s+(p.pagadas||0),0);
@@ -1542,40 +1555,43 @@ function renderAnual(){
   const tPendent=tNet-tPag;
   const nc=tNet>0?'green':tNet<0?'red':'';
   const pc=tPendent>0?'red':tPendent<0?'green':'';
-  // Preu actual: mes més recent amb dades (de qualsevol any)
   const totsPagements=state.pagos.filter(p=>p.pagadas>0&&p.import>0).sort((a,b)=>b.mes.localeCompare(a.mes));
   const preuActualA=totsPagements.length>0?(totsPagements[0].import/totsPagements[0].pagadas):null;
   const eurosPendent=preuActualA!==null?tPendent*preuActualA:null;
-  const pendentLabel=tPendent!==0
-    ?`${(tPendent>0?'+':'')+fmtH(tPendent)}`:'—';
   const pendentSub=tPendent!==0
-    ?`<div style="font-size:11px;color:var(--text3);margin-top:3px;">${(tPendent/8).toFixed(1).replace('.',',')} dies${eurosPendent!==null?' · ≈'+fmtEur(eurosPendent):''}</div>`
-    :'';
-  document.getElementById('kpi-anual').innerHTML=`
+    ?`<div style="font-size:11px;color:var(--text3);margin-top:3px;">${(tPendent/8).toFixed(1).replace('.',',')} dies${eurosPendent!==null?' · ≈'+fmtEur(eurosPendent):''}</div>`:'';
+
+  document.getElementById('kpi-anual').innerHTML=yE.length===0?'':`
     <div class="kpi"><div class="kpi-label">EXTRAS</div><div class="kpi-value ${nc} small">${tNet>0?'+':''}${fmtH(tNet)}</div></div>
     <div class="kpi"><div class="kpi-label">HORES PAGADES</div><div class="kpi-value small">${tPag>0?fmtH(tPag):'—'}</div></div>
     <div class="kpi"><div class="kpi-label">TOTAL COBRAT</div><div class="kpi-value small">${tEuros>0?fmtEur(tEuros):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">PENDENTS</div><div class="kpi-value ${pc} small">${pendentLabel}</div>${pendentSub}</div>`;
+    <div class="kpi"><div class="kpi-label">PENDENTS</div><div class="kpi-value ${pc} small">${tPendent!==0?(tPendent>0?'+':'')+fmtH(tPendent):'—'}</div>${pendentSub}</div>`;
 
-  // Gràfic de barres per mes
-  const md=MONTHS_S.map((name,m)=>{const net=netH(m,y);return{name,net};});
-  const mxA=Math.max(...md.map(d=>Math.abs(d.net)),0.01);
-  let ch='';
-  md.forEach(d=>{
-    const pw=d.net>0?(d.net/mxA*100).toFixed(1):0;
-    const nw=d.net<0?(Math.abs(d.net)/mxA*100).toFixed(1):0;
-    const noD=d.net===0;
-    const vc=d.net>0?'green':d.net<0?'red':'dim';
-    ch+=`<div class="chart-row">
-      <span class="chart-lbl">${d.name}</span>
-      <div class="chart-bar-bg">
-        <div class="chart-mid-line"></div>
-        ${d.net>0?`<div class="bar-pos" style="width:${pw}%"></div>`:''}
-        ${d.net<0?`<div class="bar-neg" style="width:${nw}%"></div>`:''}
-      </div>
-      <span class="chart-val ${noD?'dim':vc}">${noD?'—':((d.net>0?'+':'')+fmtH(d.net))}</span>
+  if(!yE.length){
+    document.getElementById('anual-chart').innerHTML='<div class="empty-state"><i class="ti ti-calendar-off"></i><p>Sense dades per a '+y+'</p></div>';
+    return;
+  }
+
+  // Graella de targetes 3×4
+  let ch='<div class="month-grid">';
+  MONTHS_S.forEach((name,m)=>{
+    const net=netH(m,y);
+    const pago=state.pagos.find(p=>{const[py,pm]=p.mes.split('-').map(Number);return py===y&&pm-1===m;});
+    const euros=pago&&pago.import>0?fmtEur(pago.import):null;
+    const noD=net===0&&!pago;
+    const isCur=m===curM&&y===curY;
+    let cls='month-card';
+    if(isCur)cls+=' cur';
+    if(noD)cls+=' empty';
+    else if(net>=0)cls+=' pos';
+    else cls+=' neg';
+    ch+=`<div class="${cls}">
+      <div class="month-name">${name}</div>
+      <div class="month-hours">${noD?'—':(net>0?'+':'')+fmtH(net)}</div>
+      <div class="month-euros" style="${euros?'color:var(--accent);':''}">${euros||'—'}</div>
     </div>`;
   });
+  ch+='</div>';
   document.getElementById('anual-chart').innerHTML=ch;
 }
 
