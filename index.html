@@ -687,15 +687,29 @@ body {
     <div class="card">
       <div class="card-title">Dies de vacances</div>
       <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6;">
-        Dies base anuals. Els dies no gaudits s'acumulen automàticament a l'any següent.
+        Els dies no gaudits s'acumulen automàticament any rere any.
       </div>
       <div class="form-group">
         <label class="form-label">Dies base per any</label>
         <input class="form-input" type="number" id="vc-dies-base" min="1" max="60" placeholder="22">
       </div>
-      <div id="vc-base-actual" style="font-size:12px;color:var(--text3);margin-top:6px;"></div>
-      <button class="btn btn-primary mt12" onclick="saveDiesBase()">
-        <i class="ti ti-device-floppy"></i> Guardar
+      <div id="vc-base-actual" style="font-size:12px;color:var(--text3);margin-top:6px;margin-bottom:12px;"></div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;margin-top:12px;">Inici a l'app</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.5;">Si vas acumular dies d'anys anteriors a quan vas començar a usar l'app, introdueix-los aquí.</div>
+      <div class="form-row form-group">
+        <div>
+          <label class="form-label">Any d'inici</label>
+          <input class="form-input" type="number" id="vc-any-inici" min="2020" max="2040" placeholder="${new Date().getFullYear()}">
+        </div>
+        <div>
+          <label class="form-label">Dies arrossegats</label>
+          <input class="form-input" type="number" id="vc-dies-inici" min="0" max="60" placeholder="0">
+        </div>
+      </div>
+      <div id="vc-inici-actual" style="font-size:12px;color:var(--text3);margin-top:-4px;margin-bottom:4px;"></div>
+      <button class="btn btn-primary mt8" onclick="saveDiesBase()">
+        <i class="ti ti-device-floppy"></i> Guardar configuració
       </button>
     </div>
 
@@ -1087,19 +1101,29 @@ function deleteFestivoAPI(fecha,y){const l=state.festivosAPI[String(y)]||[];stat
 
 function saveDiesBase(){
   const dies=parseInt(document.getElementById('vc-dies-base').value);
-  if(isNaN(dies)||dies<1)return alert('Introdueix un nombre vàlid de dies.');
-  state.diesBase=dies;
+  const anyInici=parseInt(document.getElementById('vc-any-inici').value);
+  const diesInici=parseInt(document.getElementById('vc-dies-inici').value);
+  if(!isNaN(dies)&&dies>=1) state.diesBase=dies;
+  if(!isNaN(anyInici)&&!isNaN(diesInici)&&diesInici>=0){
+    state.anyInici=anyInici;
+    state.diesArrossegatsInici=diesInici;
+  }
   document.getElementById('vc-dies-base').value='';
+  document.getElementById('vc-any-inici').value='';
+  document.getElementById('vc-dies-inici').value='';
   saveAll();render();
 }
 
 function calcDiesDisponibles(any){
   const base=state.diesBase||22;
-  // Obtenir el primer any amb registres
-  const anysVac=state.vacaciones.map(v=>new Date(v.desde+'T00:00:00').getFullYear());
-  const primerAny=anysVac.length>0?Math.min(...anysVac):any;
-  if(any<=primerAny) return base;
-  // Acumulació recursiva (màxim 10 anys enrere per seguretat)
+  // Si tenim any d'inici configurat i aquest any és l'any d'inici
+  if(state.anyInici&&state.diesArrossegatsInici>=0&&any===state.anyInici){
+    return base+(state.diesArrossegatsInici||0);
+  }
+  // Primer any amb registres (si no hi ha any d'inici configurat)
+  const anyIniciEfectiu=state.anyInici||any;
+  if(any<=anyIniciEfectiu) return base;
+  // Acumulació recursiva
   const anyAnterior=any-1;
   const diesAnterior=calcDiesDisponibles(anyAnterior);
   const {gaudides:gA,assignades:asgA}=diesVacStats(anyAnterior);
@@ -1724,10 +1748,19 @@ function renderFestivosAjustos(y){
 function renderAjustos(){
   document.getElementById('ajustos-name').textContent=userName;
   document.getElementById('ajustos-avatar').textContent=userName.slice(0,2).toUpperCase();
-  // Actualizar festivos-year en Ajustos (usa el año del calendario)
   const festYearEl=document.getElementById('festivos-year');
   if(festYearEl)festYearEl.textContent=calYear;
   renderFestivosAjustos(calYear);
+  const baseEl=document.getElementById('vc-base-actual');
+  if(baseEl)baseEl.textContent=`Configuració actual: ${state.diesBase||22} dies base/any`;
+  const inEl=document.getElementById('vc-inici-actual');
+  if(inEl){
+    if(state.anyInici){
+      inEl.textContent=`Any d'inici: ${state.anyInici} · ${state.diesArrossegatsInici||0} dies arrossegats`;
+    } else {
+      inEl.textContent='Sense any d\'inici — l\'app usa el primer any amb registres.';
+    }
+  }
 }
 
 function showBackupStatus(type, msg){
