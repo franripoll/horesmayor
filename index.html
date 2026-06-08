@@ -607,7 +607,7 @@ body {
 
   <!-- VACACIONES -->
   <div id="tab-vacaciones" class="section">
-    <div id="vac-contadores"></div>
+    <div id="vac-contadores-cur"></div>
     <div class="card">
       <div class="card-title">Seleccionar dies de vacances</div>
       <!-- Nav mes calendari vac -->
@@ -651,6 +651,7 @@ body {
       <div class="card-title">Períodes registrats</div>
       <div id="vac-lista"></div>
     </div>
+    <div id="vac-contadores-old"></div>
   </div>
 
   <!-- NAV -->
@@ -1705,15 +1706,13 @@ function renderVacaciones(){
   const baseEl=document.getElementById('vc-base-actual');
   if(baseEl) baseEl.textContent=`Dies base actuals: ${state.diesBase||22} dies/any`;
 
-  let ch='';
-  // Mostrar els últims 3 anys amb dades + any actual
   const now=new Date();
   const curY=now.getFullYear();
   const anysAMostrar=new Set([curY, curY-1]);
   state.vacaciones.forEach(v=>anysAMostrar.add(new Date(v.desde+'T00:00:00').getFullYear()));
   const anysOrdenats=[...anysAMostrar].sort((a,b)=>b-a).slice(0,4);
 
-  anysOrdenats.forEach(any=>{
+  function buildVacBlock(any){
     const totalDies=calcDiesDisponibles(any);
     const {gaudides,assignades}=diesVacStats(any);
     const usats=gaudides+assignades;
@@ -1724,7 +1723,7 @@ function renderVacaciones(){
     const pctGaud=Math.min(100,Math.round((gaudides/totalDies)*100));
     const barCls=queden<0?'over':queden<=3?'amber':'';
     const numCls=queden<0?'red':queden<=3?'amber':'green';
-    ch+=`<div class="vac-block">
+    return `<div class="vac-block">
       <div class="vac-block-head">
         <span class="vac-block-year">Vacances ${any}</span>
       </div>
@@ -1744,22 +1743,33 @@ function renderVacaciones(){
       ${queden<=3&&queden>=0?`<div class="warn-msg amber">⚠ Queden ${queden} dies disponibles.</div>`:''}
       ${queden<0?`<div class="warn-msg red">⚠ Quota excedida en ${Math.abs(queden)} dies.</div>`:''}
     </div>`;
-  });
-  document.getElementById('vac-contadores').innerHTML=ch;
-  if(!state.vacaciones.length){document.getElementById('vac-lista').innerHTML='<div class="empty-state"><i class="ti ti-beach-off"></i><p>Sense períodes registrats</p></div>';return;}
-  document.getElementById('vac-lista').innerHTML=state.vacaciones.map(v=>{
-    const d1=new Date(v.desde+'T00:00:00'),d2=new Date(v.hasta+'T00:00:00');
-    const f=d=>d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0');
-    const dies=v.dies||v.dias||0;
-    // Si tots els dies son iguals és un dia solt
-    const label=v.desde===v.hasta?f(d1):`${f(d1)} → ${f(d2)}`;
-    return`<div class="entry-item">
-      <span class="entry-date" style="min-width:80px;font-size:12px;">${label}</span>
-      <span class="entry-desc">${v.desc}</span>
-      <span class="pill green">${dies}d</span>
-      <button class="icon-btn del" onclick="deleteVac(${v.id})"><i class="ti ti-trash"></i></button>
-    </div>`;
-  }).join('');
+  }
+
+  // Any actual — dalt del calendari
+  document.getElementById('vac-contadores-cur').innerHTML=buildVacBlock(curY);
+
+  // Llista períodes — amb any complet
+  if(!state.vacaciones.length){
+    document.getElementById('vac-lista').innerHTML='<div class="empty-state"><i class="ti ti-beach-off"></i><p>Sense períodes registrats</p></div>';
+  } else {
+    document.getElementById('vac-lista').innerHTML=state.vacaciones.map(v=>{
+      const d1=new Date(v.desde+'T00:00:00'),d2=new Date(v.hasta+'T00:00:00');
+      const f=d=>d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
+      const fShort=d=>d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0');
+      const dies=v.dies||v.dias||0;
+      const label=v.desde===v.hasta?f(d1):`${fShort(d1)} → ${f(d2)}`;
+      return`<div class="entry-item">
+        <span class="entry-date" style="min-width:88px;font-size:12px;">${label}</span>
+        <span class="entry-desc">${v.desc}</span>
+        <span class="pill green">${dies}d</span>
+        <button class="icon-btn del" onclick="deleteVac(${v.id})"><i class="ti ti-trash"></i></button>
+      </div>`;
+    }).join('');
+  }
+
+  // Anys anteriors — sota la llista
+  const anysAnteriors=anysOrdenats.filter(a=>a!==curY);
+  document.getElementById('vac-contadores-old').innerHTML=anysAnteriors.map(any=>buildVacBlock(any)).join('');
 }
 
 // AJUSTOS
