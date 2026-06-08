@@ -639,7 +639,8 @@ body {
       <!-- Llegenda -->
       <div class="cal-legend" style="margin-top:10px;">
         <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>Seleccionat</div>
-        <div class="leg-item"><div class="leg-dot" style="background:var(--red);opacity:.4"></div>Festiu</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--red);opacity:.5"></div>Festiu CV</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--amber);opacity:.6"></div>Festiu local</div>
         <div class="leg-item"><div class="leg-dot" style="background:var(--border2)"></div>Cap de setmana</div>
       </div>
       <!-- Resum selecció -->
@@ -1300,21 +1301,22 @@ function renderVacCal(){
     const dstr=ds(y,m,d);
     const dow=new Date(y,m,d).getDay();
     const isWE=dow===0||dow===6;
-    const fest=getFestivoAPI(dstr)||getFestivoLocal(dstr);
+    const fAPI=getFestivoAPI(dstr);
+    const fLocal=getFestivoLocal(dstr);
+    const fest=fAPI||fLocal;
     const laboral=!isWE&&!fest;
     const isSel=vacSelected.has(dstr);
     const isExisting=existingDays.has(dstr);
     const isToday=dstr===tod;
-
     let cls='cal-cell';
     if(isWE)cls+=' weekend no-laboral';
-    else if(fest)cls+=' festivo-api no-laboral';
+    else if(fLocal)cls+=' festivo-local no-laboral';
+    else if(fAPI)cls+=' festivo-api no-laboral';
     else if(isSel)cls+=' vac-sel';
     else if(isExisting)cls+=' vac-existing';
     if(isToday)cls+=' today';
 
-    const dotColor=fest?'red':isWE?'':'';
-    let inner=`<div class="day-n">${d}${fest?'<span class="f-dot red"></span>':''}</div>`;
+    let inner=`<div class="day-n">${d}${fAPI?'<span class="f-dot red"></span>':fLocal?'<span class="f-dot amber"></span>':''}</div>`;
     if(isExisting&&!isSel){inner+=`<div class="cal-strip vac" style="font-size:9px;">✓</div>`;}
     if(isSel){inner+=`<div style="font-size:10px;color:var(--green);font-weight:700;">✓</div>`;}
 
