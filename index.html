@@ -130,7 +130,7 @@ body {
 .app-nav {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
   background: var(--bg2); border-top: 1px solid var(--border);
-  display: flex; padding-bottom: var(--safe-bottom);
+  display: flex; align-items: flex-end; padding-bottom: var(--safe-bottom);
 }
 .nav-item {
   flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -141,6 +141,22 @@ body {
 }
 .nav-item i { font-size: 20px; line-height: 1; }
 .nav-item.active { color: var(--accent); }
+.nav-item.nav-center {
+  flex: 1.2; padding: 0 4px 8px; position: relative;
+}
+.nav-center-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: var(--accent); color: #fff;
+  border-radius: 18px; padding: 10px 18px 8px;
+  font-family: var(--font); font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+  transform: translateY(-10px);
+  box-shadow: 0 4px 14px rgba(196,98,45,0.35);
+  transition: opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.nav-center-btn i { font-size: 22px; line-height: 1; }
+.nav-center-btn:active { opacity: 0.85; transform: translateY(-10px) scale(0.96); }
+.nav-item.nav-center.active .nav-center-btn { background: var(--accent2); }
 
 /* SECCIONES */
 .section { display: none; padding: 16px 16px 0; min-height: calc(100vh - 60px); }
@@ -516,11 +532,6 @@ body {
     </div>
   </div>
 
-  <!-- RESUMEN -->
-  <div id="tab-resumen" class="section">
-    <div id="resum-content"></div>
-  </div>
-
   <!-- CALENDARIO -->
   <div id="tab-calendario" class="section">
     <div class="kpi-grid cols3" id="kpi-cal"></div>
@@ -784,17 +795,14 @@ body {
   </div>
 
   <nav class="app-nav">
-    <button class="nav-item active" onclick="showTab('registro',event)">
-      <i class="ti ti-clock"></i>Registre
-    </button>
-    <button class="nav-item" onclick="showTab('resumen',event)">
-      <i class="ti ti-chart-bar"></i>Resum
-    </button>
     <button class="nav-item" onclick="showTab('calendario',event)">
       <i class="ti ti-calendar"></i>Calendari
     </button>
     <button class="nav-item" onclick="showTab('anual',event)">
       <i class="ti ti-calendar-stats"></i>Anual
+    </button>
+    <button class="nav-item nav-center active" onclick="showTab('registro',event)">
+      <div class="nav-center-btn"><i class="ti ti-clock"></i>Registre</div>
     </button>
     <button class="nav-item" onclick="showTab('pago',event)">
       <i class="ti ti-coin"></i>Pagament
@@ -981,7 +989,7 @@ function showTabById(tab){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  const order=['registro','resumen','calendario','anual','pago','vacaciones'];
+  const order=['calendario','anual','registro','pago','vacaciones'];
   const i=order.indexOf(tab);
   if(i>=0)document.querySelectorAll('.nav-item')[i].classList.add('active');
   // Marcar avatar si estamos en ajustos
@@ -996,7 +1004,7 @@ function toggleAjustos(){
     showTabById(lastTabBeforeAjustos);
   } else {
     // Guardar la pestaña actual
-    const order=['registro','resumen','calendario','anual','pago','vacaciones'];
+    const order=['calendario','anual','registro','pago','vacaciones'];
     for(const t of order){
       if(document.getElementById('tab-'+t).classList.contains('active')){lastTabBeforeAjustos=t;break;}
     }
@@ -1333,7 +1341,7 @@ function savePago(){
   saveAll();render();
 }
 
-function render(){renderRegistro();renderResumen();renderCalendario();renderAnual();renderPago();renderVacaciones();renderAjustos();renderVacCal();}
+function render(){renderRegistro();renderCalendario();renderAnual();renderPago();renderVacaciones();renderAjustos();renderVacCal();}
 
 function renderRegistro(){
   // Últims 10 registres de tota l'app, sense agrupar per mes
@@ -1358,633 +1366,5 @@ function renderRegistro(){
   }).join('');
 }
 
-function renderResumen(){
-  const now=new Date();
-  const m=now.getMonth(), y=now.getFullYear();
-  const tod=today();
 
-  // Preu actual (mes més recent amb dades)
-  const pagosAmbImport=state.pagos.filter(p=>p.pagadas>0&&p.import>0).sort((a,b)=>b.mes.localeCompare(a.mes));
-  const preuActual=pagosAmbImport.length>0?(pagosAmbImport[0].import/pagosAmbImport[0].pagadas):null;
-
-  // ── AQUEST MES ──
-  const netMes=netH(m,y);
-  const ncMes=netMes>0?'var(--green)':netMes<0?'var(--red)':'var(--text)';
-  const estimacioMes=preuActual!==null?netMes*preuActual:null;
-
-  // ── AQUEST ANY ──
-  const yEntrs=yEntries(y);
-  const netAny=yEntrs.reduce((s,e)=>s+e.horas,0);
-  const pagosAny=state.pagos.filter(p=>p.mes.startsWith(String(y)));
-  const tPagAny=pagosAny.reduce((s,p)=>s+(p.pagadas||0),0);
-  const tCobratAny=pagosAny.reduce((s,p)=>s+(p.import||0),0);
-  const pendentAny=netAny-tPagAny;
-  const eurosPendent=preuActual!==null?pendentAny*preuActual:null;
-  const diesPendent=pendentAny/8;
-  const ncAny=netAny>0?'var(--green)':netAny<0?'var(--red)':'var(--text)';
-  const pcAny=pendentAny>0?'var(--red)':pendentAny<0?'var(--green)':'var(--text3)';
-
-  // ── VACANCES ──
-  const totalDiesVac=calcDiesDisponibles(y);
-  const {gaudides:vacGaud, assignades:vacAssig}=diesVacStats(y);
-  const vacDisp=totalDiesVac-vacGaud-vacAssig;
-
-  // ── PROPER FESTIU ──
-  const totsF=[
-    ...(state.festivosAPI[String(y)]||[]),
-    ...(state.festivosAPI[String(y+1)]||[]),
-    ...state.festivosLocales
-  ].sort((a,b)=>a.fecha.localeCompare(b.fecha));
-  const proxim=totsF.find(f=>f.fecha>=tod);
-  let proximHtml='<div style="font-size:13px;color:var(--text3);">Carrega els festius a Ajustos per veure el proper.</div>';
-  if(proxim){
-    const dp=new Date(proxim.fecha+'T00:00:00');
-    const diffD=Math.round((dp-new Date(tod+'T00:00:00'))/86400000);
-    const monthsFull=['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'];
-    const diesText=diffD===0?'<span style="color:var(--accent);font-weight:700;">Avui!</span>':diffD===1?'<span style="color:var(--green);font-weight:700;">Demà</span>':`<span style="color:var(--green);font-weight:700;">En ${diffD} dies</span>`;
-    proximHtml=`
-      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;">${proxim.nombre}</div>
-      <div style="font-size:13px;color:var(--text2);">${DAYS_FULL[dp.getDay()]} ${dp.getDate()} de ${monthsFull[dp.getMonth()]} de ${dp.getFullYear()}</div>
-      <div style="margin-top:6px;font-size:14px;">${diesText}</div>`;
-  }
-
-  // ── RENDER ──
-  const rowStyle='display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;';
-  const lastRowStyle='display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:14px;';
-  const lblStyle='color:var(--text2);';
-  const valStyle='font-weight:700;';
-
-  document.getElementById('resum-content').innerHTML=`
-
-    <!-- Aquest mes -->
-    <div class="card">
-      <div class="card-title">Aquest mes · ${MONTHS[m]} ${y}</div>
-      <div style="${rowStyle}">
-        <span style="${lblStyle}">Hores extra netes</span>
-        <span style="${valStyle};color:${ncMes};">${netMes!==0?(netMes>0?'+':'')+fmtH(netMes):'—'}</span>
-      </div>
-      <div style="${lastRowStyle}">
-        <span style="${lblStyle}">Estimació a cobrar</span>
-        <span style="${valStyle};color:var(--accent);">${estimacioMes!==null?(estimacioMes>0?'≈ ':'')+fmtEur(estimacioMes):'Afegeix pagaments'}</span>
-      </div>
-    </div>
-
-    <!-- Aquest any -->
-    <div class="card">
-      <div class="card-title">Aquest any · ${y}</div>
-      <div style="${rowStyle}">
-        <span style="${lblStyle}">Hores acumulades</span>
-        <span style="${valStyle};color:${ncAny};">${netAny!==0?(netAny>0?'+':'')+fmtH(netAny):'—'}</span>
-      </div>
-      <div style="${rowStyle}">
-        <span style="${lblStyle}">Total cobrat</span>
-        <span style="${valStyle};">${tCobratAny>0?fmtEur(tCobratAny):'—'}</span>
-      </div>
-      <div style="${lastRowStyle}">
-        <span style="${lblStyle}">Hores pendents</span>
-        <div style="text-align:right;">
-          <div style="${valStyle};color:${pcAny};">${pendentAny!==0?(pendentAny>0?'+':'')+fmtH(pendentAny):'—'}</div>
-          ${pendentAny!==0?`<div style="font-size:11px;color:var(--text3);margin-top:1px;">${diasPendent(pendentAny)}${eurosPendent!==null?' · ≈'+fmtEur(eurosPendent):''}</div>`:''}
-        </div>
-      </div>
-    </div>
-
-    <!-- Vacances -->
-    <div class="card">
-      <div class="card-title">Vacances ${y}</div>
-      <div style="${rowStyle}">
-        <span style="${lblStyle}">Dies totals</span>
-        <span style="${valStyle};">${totalDiesVac}</span>
-      </div>
-      <div style="${rowStyle}">
-        <span style="${lblStyle}">Ja gaudits</span>
-        <span style="${valStyle};color:var(--text2);">${vacGaud}</span>
-      </div>
-      <div style="${rowStyle}">
-        <span style="${lblStyle}">Assignats (futurs)</span>
-        <span style="${valStyle};color:var(--blue);">${vacAssig}</span>
-      </div>
-      <div style="${lastRowStyle}">
-        <span style="${lblStyle}">Disponibles</span>
-        <span style="${valStyle};color:${vacDisp<=3?'var(--red)':'var(--green)'};">${vacDisp}</span>
-      </div>
-    </div>
-
-    <!-- Proper festiu -->
-    <div class="card">
-      <div class="card-title">Proper festiu</div>
-      ${proximHtml}
-    </div>
-  `;
-}
-
-function diasPendent(h){
-  const d=(h/8);
-  return (d>0?'+':'')+d.toFixed(1).replace('.',',')+' dies';
-}
-
-function renderCalendario(){
-  const m=calMonth,y=calYear;
-  document.getElementById('cal-title').textContent=MONTHS[m]+' '+y;
-  document.getElementById('festivos-year').textContent=y;
-  const net=netH(m,y);
-  const nc=net>0?'green':net<0?'red':'';
-
-  // Import pagat aquest mes
-  const pago=state.pagos.find(p=>{const[py,pm]=p.mes.split('-').map(Number);return py===y&&pm-1===m;});
-  const importPagat=pago?pago.import:null;
-
-  // Dies de vacances gaudits aquest mes
-  const mesStr=y+'-'+String(m+1).padStart(2,'0');
-  const diesVacMes=state.vacaciones.reduce((s,v)=>{
-    const dies=(v.diesList||[]).filter(d=>d.startsWith(mesStr)&&d<=today()).length;
-    if(dies>0)return s+dies;
-    // compatibilitat registres antics
-    if(!v.diesList&&v.desde.startsWith(mesStr)){
-      const dim2=new Date(y,m+1,0).getDate();
-      let c=0;
-      for(let d=1;d<=dim2;d++){const ds2=mesStr+'-'+String(d).padStart(2,'0');if(ds2>=v.desde&&ds2<=v.hasta&&ds2<=today())c++;}
-      return s+c;
-    }
-    return s;
-  },0);
-
-  document.getElementById('kpi-cal').innerHTML=`
-    <div class="kpi"><div class="kpi-label">HORES EXTRA</div><div class="kpi-value ${nc} small">${net!==0?(net>0?'+':'')+fmtH(net):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">IMPORT PAGAT</div><div class="kpi-value small">${importPagat!==null?fmtEur(importPagat):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">DIES VACANCES</div><div class="kpi-value small">${diesVacMes>0?diesVacMes+'d':'—'}</div></div>`;
-
-  const first=new Date(y,m,1);let sdow=first.getDay();sdow=sdow===0?6:sdow-1;
-  const dim=new Date(y,m+1,0).getDate();const tod=today();
-  const allE=mEntries(m,y);const maxA=Math.max(...allE.map(e=>Math.abs(e.horas)),0.01);
-
-  let html='';
-  for(let i=0;i<sdow;i++)html+='<div class="cal-cell empty"></div>';
-  for(let d=1;d<=dim;d++){
-    const dstr=ds(y,m,d);const dow=new Date(y,m,d).getDay();const isWE=dow===0||dow===6;
-    const vac=isInVac(dstr);const fAPI=getFestivoAPI(dstr);const fLocal=getFestivoLocal(dstr);
-    const de=eDateEntries(dstr);const dayNet=de.reduce((s,e)=>s+e.horas,0);const isSel=dstr===selectedDate;
-    let cls='cal-cell';
-    if(isWE)cls+=' weekend';if(dstr===tod)cls+=' today';if(isSel)cls+=' selected';
-    if(fLocal)cls+=' festivo-local';else if(fAPI)cls+=' festivo-api';
-    else if(vac&&de.length===0)cls+=' has-vac';
-    const fest=fLocal||fAPI;
-    let inner=`<div class="day-n">${d}${fLocal?'<span class="f-dot amber"></span>':fAPI?'<span class="f-dot red"></span>':''}</div>`;
-    if(fest&&de.length===0){inner+=`<div class="cal-strip ${fLocal?'fest-local':'fest-api'}">${fest.nombre.slice(0,7)}</div>`;}
-    else if(vac&&de.length===0&&!fest){inner+=`<div class="cal-strip vac">${vac.desc.slice(0,7)}</div>`;}
-    if(de.length>0){
-      const bw=Math.round((Math.abs(dayNet)/maxA)*100);
-      inner+=`<div class="cal-h ${dayNet>=0?'pos':'neg'}">${dayNet>0?'+':''}${fmtH(dayNet)}</div>`;
-      inner+=`<div class="cal-bar ${dayNet>=0?'pos':'neg'}" style="width:${Math.max(bw,20)}%"></div>`;
-    }
-    html+=`<div class="${cls}" onclick="selectCalDay('${dstr}')">${inner}</div>`;
-  }
-  const tot=sdow+dim;const rem=(7-tot%7)%7;for(let i=0;i<rem;i++)html+='<div class="cal-cell empty"></div>';
-  document.getElementById('cal-grid').innerHTML=html;
-
-  // Festivos lista — en calendario (compacta, solo badges) y en Ajustos (completa con gestión)
-  const apiList=state.festivosAPI[String(y)]||[];
-  const locals=state.festivosLocales.filter(f=>f.fecha.startsWith(String(y)));
-
-  // Festius — llista amb colors i proper festiu
-  const allYear=[...apiList,...locals].sort((a,b)=>a.fecha.localeCompare(b.fecha));
-
-  // Proper festiu (inclou any seguent si cal)
-  const nextYearAPI=state.festivosAPI[String(y+1)]||[];
-  const allFuture=[...allYear,...nextYearAPI,...state.festivosLocales.filter(f=>f.fecha.startsWith(String(y+1)))].sort((a,b)=>a.fecha.localeCompare(b.fecha));
-  const proxim=allFuture.find(f=>f.fecha>tod);
-  const bannerEl=document.getElementById('proxim-festiu-banner');
-  if(proxim&&bannerEl){
-    const dp=new Date(proxim.fecha+'T00:00:00');
-    const diffDies=Math.round((dp-new Date(tod+'T00:00:00'))/86400000);
-    const diesText=diffDies===1?'demà':diffDies===0?'avui':`en ${diffDies} dies`;
-    const dayName=DAYS_FULL[dp.getDay()];
-    const monthsFull=['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'];
-    bannerEl.style.display='block';
-    bannerEl.innerHTML=`<div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--green);margin-bottom:3px;">PROPER FESTIU</div>
-      <div style="font-size:15px;font-weight:700;color:var(--green);">${proxim.nombre}</div>
-      <div style="font-size:12px;color:var(--green);opacity:0.8;margin-top:2px;">${dayName} ${dp.getDate()} de ${monthsFull[dp.getMonth()]} · <strong>${diesText}</strong></div>
-    </div>`;
-  } else if(bannerEl){bannerEl.style.display='none';}
-
-  if(allYear.length===0){
-    document.getElementById('festivos-lista').innerHTML='<div class="text-sm" style="padding:8px 0;">Sense festius. Carrega\'ls a Ajustos.</div>';
-  } else {
-    const monthsFull2=['gener','febrer','març','abril','maig','juny','juliol','agost','setembre','octubre','novembre','desembre'];
-    document.getElementById('festivos-lista').innerHTML=allYear.map(f=>{
-      const dp2=new Date(f.fecha+'T00:00:00');
-      const passat=f.fecha<tod;
-      const esAvui=f.fecha===tod;
-      const isLocal=state.festivosLocales.some(l=>l.fecha===f.fecha);
-      const colorText=passat?'var(--text3)':esAvui?'var(--accent)':'var(--text)';
-      const colorDate=passat?'var(--text3)':esAvui?'var(--accent)':'var(--text2)';
-      const iconN=isLocal?'ti-map-pin':'ti-flag';
-      const iconColor=isLocal?'var(--amber)':passat?'var(--text3)':'var(--red)';
-      const strike=passat?'text-decoration:line-through;':'';
-      const diffD=Math.round((new Date(f.fecha+'T00:00:00')-new Date(tod+'T00:00:00'))/86400000);
-      return`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">
-        <i class="ti ${iconN}" style="font-size:14px;color:${iconColor};flex-shrink:0;"></i>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:600;color:${colorText};${strike}">${f.nombre}</div>
-          <div style="font-size:11px;color:${colorDate};">${DAYS_FULL[dp2.getDay()]} ${dp2.getDate()} ${monthsFull2[dp2.getMonth()]}</div>
-        </div>
-        ${esAvui?'<span style="font-size:10px;background:var(--amber-bg);color:var(--amber);border-radius:20px;padding:2px 8px;font-weight:700;">AVUI</span>':''}
-        ${!passat&&!esAvui?`<span style="font-size:11px;color:var(--green);font-weight:600;">${diffD}d</span>`:''}
-      </div>`;
-    }).join('');
-  }
-
-  // Lista completa en ajustos (con botones de eliminar)
-  renderFestivosAjustos(y);
-
-  // Detail
-  const panel=document.getElementById('cal-detail');
-  if(!selectedDate){panel.style.display='none';return;}
-  const sd2=new Date(selectedDate+'T00:00:00');
-  const dName=DAYS[sd2.getDay()===0?6:sd2.getDay()-1];
-  const dLabel=dName+' '+sd2.getDate()+' de '+MONTHS[sd2.getMonth()]+' de '+sd2.getFullYear();
-  const selE=eDateEntries(selectedDate);const selVac=isInVac(selectedDate);
-  const selFAPI=getFestivoAPI(selectedDate);const selFLocal=getFestivoLocal(selectedDate);
-  const selNet=selE.reduce((s,e)=>s+e.horas,0);
-  let ph=`<div class="detail-head"><span class="detail-date">${dLabel}</span>${selNet!==0?`<span class="detail-net ${selNet>0?'pos':'neg'}">${selNet>0?'+':''}${fmtH(selNet)}</span>`:''}</div>`;
-  if(selFLocal)ph+=`<span class="fest-badge local"><i class="ti ti-map-pin"></i>${selFLocal.nombre}</span>`;
-  else if(selFAPI)ph+=`<span class="fest-badge api"><i class="ti ti-flag"></i>${selFAPI.nombre}</span>`;
-  if(selVac&&selE.length===0)ph+=`<span class="fest-badge vac"><i class="ti ti-beach"></i>${selVac.desc}</span>`;
-  if(selE.length===0&&!selFAPI&&!selFLocal&&!selVac){const dow=sd2.getDay();ph+=`<div class="detail-empty">${dow===0||dow===6?'Cap de setmana':'Sense entrades'}</div>`;}
-  else if(selE.length>0){
-    ph+=`<div class="entry-list" style="margin-top:8px;">`;
-    ph+=selE.map(e=>`<div class="entry-item">
-      <span class="entry-desc">${e.desc||'—'}</span>
-      <span class="entry-h ${e.horas>=0?'pos':'neg'}">${e.horas>0?'+':''}${fmtH(e.horas)}</span>
-      <div class="entry-actions">
-        <button class="icon-btn" onclick="startEdit(${e.id})"><i class="ti ti-pencil"></i></button>
-        <button class="icon-btn del" onclick="deleteEntry(${e.id})"><i class="ti ti-trash"></i></button>
-      </div>
-    </div>`).join('');
-    ph+=`</div>`;
-  }
-  panel.innerHTML=ph;panel.style.display='block';
-}
-function selectCalDay(d){selectedDate=selectedDate===d?null:d;renderCalendario();}
-
-function renderAnual(){
-  const y=anualYear;
-  const now=new Date();
-  const curM=now.getMonth(), curY=now.getFullYear();
-  document.getElementById('anual-title').textContent='Resum '+y;
-  const yE=yEntries(y);
-
-  // KPIs (sempre visibles)
-  const tNet=yE.reduce((s,e)=>s+e.horas,0);
-  const pagosAny=state.pagos.filter(p=>p.mes.startsWith(String(y)));
-  const tPag=pagosAny.reduce((s,p)=>s+(p.pagadas||0),0);
-  const tEuros=pagosAny.reduce((s,p)=>s+(p.import||0),0);
-  const tPendent=tNet-tPag;
-  const nc=tNet>0?'green':tNet<0?'red':'';
-  const pc=tPendent>0?'red':tPendent<0?'green':'';
-  const totsPagements=state.pagos.filter(p=>p.pagadas>0&&p.import>0).sort((a,b)=>b.mes.localeCompare(a.mes));
-  const preuActualA=totsPagements.length>0?(totsPagements[0].import/totsPagements[0].pagadas):null;
-  const eurosPendent=preuActualA!==null?tPendent*preuActualA:null;
-  const pendentSub=tPendent!==0
-    ?`<div style="font-size:11px;color:var(--text3);margin-top:3px;">${(tPendent/8).toFixed(1).replace('.',',')} dies${eurosPendent!==null?' · ≈'+fmtEur(eurosPendent):''}</div>`:'';
-
-  document.getElementById('kpi-anual').innerHTML=yE.length===0?'':`
-    <div class="kpi"><div class="kpi-label">EXTRAS</div><div class="kpi-value ${nc} small">${tNet>0?'+':''}${fmtH(tNet)}</div></div>
-    <div class="kpi"><div class="kpi-label">HORES PAGADES</div><div class="kpi-value small">${tPag>0?fmtH(tPag):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">TOTAL COBRAT</div><div class="kpi-value small">${tEuros>0?fmtEur(tEuros):'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">PENDENTS</div><div class="kpi-value ${pc} small">${tPendent!==0?(tPendent>0?'+':'')+fmtH(tPendent):'—'}</div>${pendentSub}</div>`;
-
-  if(!yE.length){
-    document.getElementById('anual-chart').innerHTML='<div class="empty-state"><i class="ti ti-calendar-off"></i><p>Sense dades per a '+y+'</p></div>';
-    return;
-  }
-
-  // Graella de targetes 3×4
-  let ch='<div class="month-grid">';
-  MONTHS_S.forEach((name,m)=>{
-    const net=netH(m,y);
-    const pago=state.pagos.find(p=>{const[py,pm]=p.mes.split('-').map(Number);return py===y&&pm-1===m;});
-    const euros=pago&&pago.import>0?fmtEur(pago.import):null;
-    const noD=net===0&&!pago;
-    const isCur=m===curM&&y===curY;
-    let cls='month-card';
-    if(isCur)cls+=' cur';
-    if(noD)cls+=' empty';
-    else if(net>=0)cls+=' pos';
-    else cls+=' neg';
-    ch+=`<div class="${cls}">
-      <div class="month-name">${name}</div>
-      <div class="month-hours">${noD?'—':(net>0?'+':'')+fmtH(net)}</div>
-      <div class="month-euros" style="${euros?'color:var(--accent);':''}">${euros||'—'}</div>
-    </div>`;
-  });
-  ch+='</div>';
-  document.getElementById('anual-chart').innerHTML=ch;
-}
-
-function renderPago(){
-  if(!state.pagos.length){document.getElementById('pago-lista').innerHTML='<div class="empty-state"><i class="ti ti-coin-off"></i><p>Sense dades de pagament</p></div>';return;}
-  document.getElementById('pago-lista').innerHTML=state.pagos.map(p=>{
-    const[y,m]=p.mes.split('-').map(Number),label=MONTHS[m-1]+' '+y;
-    const imp=p.import||0;
-    const preuHora=p.pagadas>0?imp/p.pagadas:0;
-    const diff=p.netAcum-p.pagadas;
-    return`<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
-      <div style="font-size:14px;font-weight:700;margin-bottom:10px;">${label}</div>
-      <div class="sum-row"><span class="sum-lbl">Hores netes treballades</span><span class="sum-val">${fmtH(p.netAcum)}</span></div>
-      <div class="sum-row"><span class="sum-lbl">Hores pagades</span><span class="sum-val">${fmtH(p.pagadas)}</span></div>
-      <div class="sum-row"><span class="sum-lbl">Diferència hores</span><span class="sum-val ${diff>=0?'green':'red'}">${diff>=0?'+':''}${fmtH(diff)}</span></div>
-      <div class="sum-row"><span class="sum-lbl">Import cobrat</span><span class="sum-val">${fmtEur(imp)}</span></div>
-      <div class="sum-row total"><span class="sum-lbl">Preu/hora resultant</span><span class="sum-val" style="color:var(--accent);">${fmtEur(preuHora)}/h</span></div>
-    </div>`;
-  }).join('');
-}
-
-function renderVacaciones(){
-  // Actualitzar info dies base
-  const baseEl=document.getElementById('vc-base-actual');
-  if(baseEl) baseEl.textContent=`Dies base actuals: ${state.diesBase||22} dies/any`;
-
-  const now=new Date();
-  const curY=now.getFullYear();
-  const anysAMostrar=new Set([curY, curY-1]);
-  state.vacaciones.forEach(v=>anysAMostrar.add(new Date(v.desde+'T00:00:00').getFullYear()));
-  const anysOrdenats=[...anysAMostrar].sort((a,b)=>b-a).slice(0,4);
-
-  function buildVacBlock(any){
-    const totalDies=calcDiesDisponibles(any);
-    const {gaudides,assignades}=diesVacStats(any);
-    const usats=gaudides+assignades;
-    const queden=totalDies-usats;
-    const base=state.diesBase||22;
-    const arrossegament=totalDies-base;
-    const pct=Math.min(100,Math.round((usats/totalDies)*100));
-    const pctGaud=Math.min(100,Math.round((gaudides/totalDies)*100));
-    const barCls=queden<0?'over':queden<=3?'amber':'';
-    const numCls=queden<0?'red':queden<=3?'amber':'green';
-    return `<div class="vac-block">
-      <div class="vac-block-head">
-        <span class="vac-block-year">Vacances ${any}</span>
-      </div>
-      ${arrossegament>0?`<div style="font-size:12px;color:var(--blue);margin-bottom:10px;"><i class="ti ti-arrow-forward-up" style="font-size:13px;vertical-align:-2px;"></i> ${base} dies base + ${arrossegament} arrossegats = <strong>${totalDies} dies totals</strong></div>`
-      :`<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">${base} dies base</div>`}
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
-        <div class="vac-num"><div class="vac-num-val">${totalDies}</div><div class="vac-num-label">TOTALS</div></div>
-        <div class="vac-num"><div class="vac-num-val" style="color:var(--blue);">${assignades}</div><div class="vac-num-label">ASSIGNADES</div></div>
-        <div class="vac-num"><div class="vac-num-val" style="color:var(--text2);">${gaudides}</div><div class="vac-num-label">GAUDIDES</div></div>
-        <div class="vac-num"><div class="vac-num-val ${numCls}">${queden}</div><div class="vac-num-label">${queden>=0?'DISPONIBLES':'EXCEDITS'}</div></div>
-      </div>
-      <div class="progress-bg" style="position:relative;height:10px;">
-        <div style="position:absolute;top:0;left:0;height:100%;width:${pct}%;background:var(--blue);border-radius:5px;opacity:0.3;"></div>
-        <div class="progress-bar ${barCls}" style="width:${pctGaud}%;"></div>
-      </div>
-      <div class="progress-info"><span>${gaudides} gaudides · ${assignades} assignades</span><span>${pct}%</span></div>
-      ${queden<=3&&queden>=0?`<div class="warn-msg amber">⚠ Queden ${queden} dies disponibles.</div>`:''}
-      ${queden<0?`<div class="warn-msg red">⚠ Quota excedida en ${Math.abs(queden)} dies.</div>`:''}
-    </div>`;
-  }
-
-  // Any actual — dalt del calendari
-  document.getElementById('vac-contadores-cur').innerHTML=buildVacBlock(curY);
-
-  // Llista períodes — amb any complet
-  if(!state.vacaciones.length){
-    document.getElementById('vac-lista').innerHTML='<div class="empty-state"><i class="ti ti-beach-off"></i><p>Sense períodes registrats</p></div>';
-  } else {
-    document.getElementById('vac-lista').innerHTML=state.vacaciones.map(v=>{
-      const d1=new Date(v.desde+'T00:00:00'),d2=new Date(v.hasta+'T00:00:00');
-      const f=d=>d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
-      const fShort=d=>d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0');
-      const dies=v.dies||v.dias||0;
-      const label=v.desde===v.hasta?f(d1):`${fShort(d1)} → ${f(d2)}`;
-      return`<div class="entry-item">
-        <span class="entry-date" style="min-width:88px;font-size:12px;">${label}</span>
-        <span class="entry-desc">${v.desc}</span>
-        <span class="pill green">${dies}d</span>
-        <button class="icon-btn del" onclick="deleteVac(${v.id})"><i class="ti ti-trash"></i></button>
-      </div>`;
-    }).join('');
-  }
-
-  // Anys anteriors — sota la llista
-  const anysAnteriors=anysOrdenats.filter(a=>a!==curY);
-  document.getElementById('vac-contadores-old').innerHTML=anysAnteriors.map(any=>buildVacBlock(any)).join('');
-}
-
-// AJUSTOS
-function saveUserName(){
-  const name=document.getElementById('aj-name').value.trim();
-  if(!name)return alert('Introdueix un nom vàlid.');
-  userName=name;
-  saveAll();
-  document.getElementById('header-name').textContent=userName;
-  document.getElementById('user-avatar').textContent=userName.slice(0,2).toUpperCase();
-  document.getElementById('ajustos-avatar').textContent=userName.slice(0,2).toUpperCase();
-  document.getElementById('ajustos-name').textContent=userName;
-  document.getElementById('aj-name').value='';
-  showBackupStatus('success','✓ Nom actualitzat correctament.');
-}
-
-function renderFestivosAjustos(y){
-  const el=document.getElementById('festivos-lista-ajustos');
-  if(!el)return;
-  const apiList=state.festivosAPI[String(y)]||[];
-  const locals=state.festivosLocales.filter(f=>f.fecha.startsWith(String(y)));
-  let html='';
-  if(apiList.length===0&&locals.length===0){
-    html='<div class="text-sm" style="margin-top:4px;">Sense festius registrats per a '+y+'.</div>';
-  } else {
-    if(apiList.length>0){
-      html+='<div class="text-sm" style="margin-bottom:4px;">Festius CV ('+apiList.length+')</div>';
-      apiList.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');html+=`<span class="ftag api"><i class="ti ti-flag" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}<button onclick="deleteFestivoAPI('${f.fecha}','${y}');renderFestivosAjustos(${y});renderCalendario()">×</button></span>`;});
-    }
-    if(locals.length>0){
-      html+='<div class="text-sm" style="margin-top:8px;margin-bottom:4px;">Festius locals</div>';
-      locals.forEach(f=>{const d=new Date(f.fecha+'T00:00:00');html+=`<span class="ftag local"><i class="ti ti-map-pin" style="font-size:10px;"></i>${d.getDate()}/${d.getMonth()+1} ${f.nombre}<button onclick="deleteFestivoLocal('${f.fecha}');renderFestivosAjustos(${y});renderCalendario()">×</button></span>`;});
-    }
-  }
-  el.innerHTML=html;
-}
-
-function renderAjustos(){
-  document.getElementById('ajustos-name').textContent=userName;
-  document.getElementById('ajustos-avatar').textContent=userName.slice(0,2).toUpperCase();
-  const festYearEl=document.getElementById('festivos-year');
-  if(festYearEl)festYearEl.textContent=calYear;
-  renderFestivosAjustos(calYear);
-  const baseEl=document.getElementById('vc-base-actual');
-  if(baseEl)baseEl.textContent=`Configuració actual: ${state.diesBase||22} dies base/any`;
-  const inEl=document.getElementById('vc-inici-actual');
-  if(inEl){
-    if(state.anyInici){
-      inEl.textContent=`Any d'inici: ${state.anyInici} · ${state.diesArrossegatsInici||0} dies arrossegats`;
-    } else {
-      inEl.textContent='Sense any d\'inici — l\'app usa el primer any amb registres.';
-    }
-  }
-}
-
-function showBackupStatus(type, msg){
-  const el=document.getElementById('backup-status');
-  el.style.display='block';
-  if(type==='success'){el.style.background='var(--green-bg)';el.style.color='var(--green)';}
-  else if(type==='error'){el.style.background='var(--red-bg)';el.style.color='var(--red)';}
-  else{el.style.background='var(--amber-bg)';el.style.color='var(--amber)';}
-  el.textContent=msg;
-  setTimeout(()=>{el.style.display='none';},5000);
-}
-
-function exportBackup(){
-  try{
-    const backup={
-      version:1,
-      exportedAt:new Date().toISOString(),
-      userName,
-      state
-    };
-    const json=JSON.stringify(backup,null,2);
-    const blob=new Blob([json],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    const date=new Date().toISOString().slice(0,10);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download='horesmayor-backup-'+date+'.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showBackupStatus('success','✓ Còpia exportada correctament. Guarda-la en un lloc segur.');
-  }catch(err){
-    showBackupStatus('error','Error exportant: '+err.message);
-  }
-}
-
-function restoreBackup(input){
-  const file=input.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      const backup=JSON.parse(e.target.result);
-      if(!backup.state||!backup.version){
-        showBackupStatus('error','Fitxer no vàlid. Ha de ser una còpia exportada des de HoresMayor.');
-        input.value=''; return;
-      }
-      if(!confirm('Això sobreescriurà totes les dades actuals amb les de la còpia del '+backup.exportedAt.slice(0,10)+'. Continuar?')){
-        input.value=''; return;
-      }
-      state={entries:[],vacaciones:[],pagos:[],festivosAPI:{},festivosLocales:[],vacCupos:[],diesBase:22,...backup.state};
-      if(backup.userName){
-        userName=backup.userName;
-        document.getElementById('header-name').textContent=userName;
-        document.getElementById('user-avatar').textContent=userName.slice(0,2).toUpperCase();
-      }
-      saveAll();render();renderAjustos();
-      showBackupStatus('success','✓ Dades restaurades correctament. '+state.entries.length+' entrades carregades.');
-      input.value='';
-    }catch(err){
-      showBackupStatus('error','Error llegint el fitxer de còpia: '+err.message);
-      input.value='';
-    }
-  };
-  reader.readAsText(file);
-}
-
-// IMPORTAR EXCEL
-function importExcel(input){
-  const file=input.files[0];
-  if(!file)return;
-  const status=document.getElementById('import-status');
-  status.style.display='block';
-  status.style.background='var(--surface2)';
-  status.style.color='var(--text2)';
-  status.textContent='Llegint el fitxer...';
-
-  if(typeof XLSX==='undefined'){
-    status.style.background='var(--red-bg)';status.style.color='var(--red)';
-    status.textContent='Error: la llibreria no ha carregat. Obre l\'app amb connexió i torna a provar.';
-    input.value='';return;
-  }
-
-  const reader=new FileReader();
-  reader.onerror=function(){
-    status.style.background='var(--red-bg)';status.style.color='var(--red)';
-    status.textContent='Error llegint el fitxer.';input.value='';
-  };
-  reader.onload=function(e){
-    try{
-      const data=new Uint8Array(e.target.result);
-      const wb=XLSX.read(data,{type:'array'});
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true});
-
-      let added=0,skipped=0;
-      const existingDates=new Set(state.entries.map(e=>e.fecha));
-
-      for(let i=0;i<rows.length;i++){
-        const row=rows[i];
-        if(!row||row.length<4)continue;
-        const dia=parseInt(row[0]);
-        const mes=parseInt(row[1]);
-        const any=parseInt(row[2]);
-        const hores=parseFloat(row[3]);
-        if(isNaN(dia)||isNaN(mes)||isNaN(any)||isNaN(hores))continue;
-        if(hores===0){skipped++;continue;}
-        const fecha=any+'-'+String(mes).padStart(2,'0')+'-'+String(dia).padStart(2,'0');
-        if(existingDates.has(fecha)){skipped++;continue;}
-        const desc=hores>0?'Importat del full de càlcul':'Eixida anticipada (importat)';
-        state.entries.push({id:Date.now()+i+Math.random(),fecha,horas:Math.round(hores*4)/4,desc});
-        existingDates.add(fecha);
-        added++;
-      }
-
-      state.entries.sort((a,b)=>b.fecha.localeCompare(a.fecha));
-      saveAll();render();
-
-      if(added>0){
-        status.style.background='var(--green-bg)';status.style.color='var(--green)';
-        status.textContent='✓ '+added+' entrades importades'+(skipped>0?' · '+skipped+' ignorades':'');
-      } else {
-        status.style.background='var(--amber-bg)';status.style.color='var(--amber)';
-        status.textContent='Cap entrada nova. '+skipped+' files ignorades (ja existien o hores zero).';
-      }
-      input.value='';
-      setTimeout(()=>{status.style.display='none';},6000);
-    }catch(err){
-      status.style.background='var(--red-bg)';status.style.color='var(--red)';
-      status.textContent='Error processant el fitxer: '+err.message;
-      input.value='';
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// Init
-loadAll();
-if(userName){initApp();}
-else{document.getElementById('splash-name').focus();}
-
-// Actualitzar data automàticament quan l'usuari torna a l'app
-document.addEventListener('visibilitychange', function(){
-  if(document.visibilityState === 'visible'){
-    const fechaInput = document.getElementById('r-fecha');
-    if(fechaInput && !editingId){
-      const currentVal = fechaInput.value;
-      const todayVal = today();
-      if(currentVal && currentVal < todayVal){
-        fechaInput.value = todayVal;
-        updateDayLabel();
-      }
-    }
-    checkBackupReminder();
-  }
-});
-
-// Service Worker
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-}
-</script>
-</body>
-</html>
+function diasPendent
