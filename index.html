@@ -1026,6 +1026,24 @@ function netH(m,y){return mEntries(m,y).reduce((s,e)=>s+e.horas,0);}
 function netAll(){return state.entries.reduce((s,e)=>s+e.horas,0);}
 function yEntries(y){return state.entries.filter(e=>new Date(e.fecha+'T00:00:00').getFullYear()===y);}
 function isInVac(d){return state.vacaciones.find(v=>d>=v.desde&&d<=v.hasta)||null;}
+function isVacExact(d){
+  return state.vacaciones.some(v=>{
+    if(v.diesList)return v.diesList.includes(d);
+    return d>=v.desde&&d<=v.hasta;
+  });
+}
+function addDaysStr(dstr,n){
+  const d=new Date(dstr+'T00:00:00');
+  d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+function isWeekendAdjVac(dstr,dow){
+  // Sols per a caps de setmana: mira si el divendres anterior o el dilluns següent són vacances
+  let fri,mon;
+  if(dow===6){fri=addDaysStr(dstr,-1);mon=addDaysStr(dstr,2);}
+  else{fri=addDaysStr(dstr,-2);mon=addDaysStr(dstr,1);}
+  return isVacExact(fri)||isVacExact(mon);
+}
 function eDateEntries(d){return state.entries.filter(e=>e.fecha===d);}
 function getFestivoAPI(d){const y=d.slice(0,4);return(state.festivosAPI[y]||[]).find(f=>f.fecha===d)||null;}
 function getFestivoLocal(d){return state.festivosLocales.find(f=>f.fecha===d)||null;}
@@ -1415,10 +1433,12 @@ function renderCalendario(){
     const dstr=ds(y,m,d);const dow=new Date(y,m,d).getDay();const isWE=dow===0||dow===6;
     const vac=isInVac(dstr);const fAPI=getFestivoAPI(dstr);const fLocal=getFestivoLocal(dstr);
     const de=eDateEntries(dstr);const dayNet=de.reduce((s,e)=>s+e.horas,0);const isSel=dstr===selectedDate;
+    const weAdjVac=isWE&&!vac&&!fAPI&&!fLocal&&isWeekendAdjVac(dstr,dow);
     let cls='cal-cell';
     if(isWE)cls+=' weekend';if(dstr===tod)cls+=' today';if(isSel)cls+=' selected';
     if(fLocal)cls+=' festivo-local';else if(fAPI)cls+=' festivo-api';
     else if(vac&&de.length===0)cls+=' has-vac';
+    else if(weAdjVac&&de.length===0)cls+=' has-vac';
     const fest=fLocal||fAPI;
     let inner=`<div class="day-n">${d}${fLocal?'<span class="f-dot amber"></span>':fAPI?'<span class="f-dot red"></span>':''}</div>`;
     if(fest&&de.length===0){inner+=`<div class="cal-strip ${fLocal?'fest-local':'fest-api'}">${fest.nombre.slice(0,7)}</div>`;}
